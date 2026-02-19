@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShieldCheck, ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import ContactDialog from '@/components/ContactDialog';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 import heroImage from '@/assets/hero-door.jpg';
 import companyLogo from '@/assets/company_logo.jpg';
 
@@ -20,7 +22,19 @@ const fadeUp = {
 const Index = () => {
   const { t, language } = useLanguage();
   const [contactOpen, setContactOpen] = useState(false);
+  const [doors, setDoors] = useState<Tables<'doors'>[]>([]);
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
+
+  useEffect(() => {
+    const fetchDoors = async () => {
+      const { data } = await supabase
+        .from('doors')
+        .select('*')
+        .limit(3);
+      if (data) setDoors(data);
+    };
+    fetchDoors();
+  }, []);
 
   return (
     <>
@@ -135,8 +149,34 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Placeholder door cards */}
-              {[1, 2, 3].map((i) => (
+              {doors.length > 0 ? doors.map((door, i) => (
+                <motion.div
+                  key={door.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group"
+                >
+                  <div className="aspect-[3/4] bg-muted overflow-hidden">
+                    {door.photo_url ? (
+                      <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShieldCheck className="w-16 h-16 text-muted-foreground/30" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-bold text-foreground">
+                      {language === 'ar' ? `باب ${door.door_number}` : `Door ${door.door_number}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {door.price.toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
+                    </p>
+                  </div>
+                </motion.div>
+              )) : [1, 2, 3].map((i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
