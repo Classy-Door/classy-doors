@@ -38,7 +38,7 @@
     --gold-dark: 43 80% 45%;
     --steel-blue: 214 41% 78%;
     --deep-blue: 207 100% 31%;
-    --orange-red: 16 100% 50%;
+    
 
     --sidebar-background: 220 35% 12%;
     --sidebar-foreground: 214 41% 78%;
@@ -156,12 +156,6 @@
     );
   }
 
-  .turkish-flag-stripe {
-    background: linear-gradient(90deg, 
-      hsl(0, 80%, 45%) 0%, 
-      hsl(0, 80%, 45%) 100%
-    );
-  }
 }
 
 @layer utilities {

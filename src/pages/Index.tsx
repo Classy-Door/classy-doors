@@ -31,8 +31,6 @@ const Index = () => {
           <div className="hero-overlay absolute inset-0" />
         </div>
 
-        {/* Turkish flag accent */}
-        <div className="absolute top-16 left-0 right-0 h-1 turkish-flag-stripe opacity-60" />
 
         <div className="relative z-10 container mx-auto px-4 text-center">
           <motion.div
@@ -44,7 +42,7 @@ const Index = () => {
               <div className="flex items-center gap-2 liquid-glass px-4 py-2 rounded-full">
                 <ShieldCheck className="w-5 h-5 text-secondary" />
                 <span className="text-sm font-semibold text-background">
-                  {language === 'ar' ? '🇹🇷 صنع في تركيا' : '🇹🇷 Made in Turkey'}
+                  {language === 'ar' ? 'صنع في تركيا' : 'Made in Turkey'}
                 </span>
               </div>
             </motion.div>
