@@ -57,7 +57,7 @@ export default {
         },
         "steel-blue": "hsl(var(--steel-blue))",
         "deep-blue": "hsl(var(--deep-blue))",
-        "orange-red": "hsl(var(--orange-red))",
+        
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

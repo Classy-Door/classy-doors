@@ -45,8 +45,6 @@ const Footer = () => {
 
   return (
     <footer className="bg-foreground text-background/90">
-      {/* Turkish flag accent stripe */}
-      <div className="h-1 turkish-flag-stripe" />
 
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
