@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      doors: {
+        Row: {
+          category: Database["public"]["Enums"]["door_category"]
+          created_at: string
+          description: string | null
+          door_number: string
+          id: string
+          photo_url: string | null
+          price: number
+          quantity_left: number
+          quantity_right: number
+          tag: Database["public"]["Enums"]["door_tag"]
+          unique_code: string
+          updated_at: string
+          width: Database["public"]["Enums"]["door_width"]
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["door_category"]
+          created_at?: string
+          description?: string | null
+          door_number?: string
+          id?: string
+          photo_url?: string | null
+          price?: number
+          quantity_left?: number
+          quantity_right?: number
+          tag?: Database["public"]["Enums"]["door_tag"]
+          unique_code: string
+          updated_at?: string
+          width?: Database["public"]["Enums"]["door_width"]
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["door_category"]
+          created_at?: string
+          description?: string | null
+          door_number?: string
+          id?: string
+          photo_url?: string | null
+          price?: number
+          quantity_left?: number
+          quantity_right?: number
+          tag?: Database["public"]["Enums"]["door_tag"]
+          unique_code?: string
+          updated_at?: string
+          width?: Database["public"]["Enums"]["door_width"]
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          direction: Database["public"]["Enums"]["door_direction"]
+          door_id: string
+          id: string
+          order_id: string
+          price: number
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          direction?: Database["public"]["Enums"]["door_direction"]
+          door_id: string
+          id?: string
+          order_id: string
+          price?: number
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          direction?: Database["public"]["Enums"]["door_direction"]
+          door_id?: string
+          id?: string
+          order_id?: string
+          price?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_door_id_fkey"
+            columns: ["door_id"]
+            isOneToOne: false
+            referencedRelation: "doors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          phone: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          cart_data: Json | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          cart_data?: Json | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id: string
+          phone?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          cart_data?: Json | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +184,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      door_category: "I" | "F"
+      door_direction: "right" | "left"
+      door_tag: "special_promotion" | "best_seller" | "newly_added" | "nothing"
+      door_width: "10" | "11"
+      order_status: "pending" | "confirmed" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +315,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      door_category: ["I", "F"],
+      door_direction: ["right", "left"],
+      door_tag: ["special_promotion", "best_seller", "newly_added", "nothing"],
+      door_width: ["10", "11"],
+      order_status: ["pending", "confirmed", "done"],
+    },
   },
 } as const

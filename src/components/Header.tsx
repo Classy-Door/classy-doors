@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X, Globe, LogOut } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import companyLogo from '@/assets/company_logo.jpg';
+import userLogo from '@/assets/userlogo.jpg';
 
 const Header = () => {
   const { t, language, setLanguage } = useLanguage();
+  const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -55,22 +58,35 @@ const Header = () => {
             {t('language')}
           </button>
 
-          {/* Auth Buttons */}
+          {/* Auth */}
           <div className="flex items-center gap-2 ms-2">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">{t('login')}</Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="glass" size="sm">{t('signup')}</Button>
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Link to="/account" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <img src={userLogo} alt="User" className="w-8 h-8 rounded-full object-cover" />
+                  <span className="text-sm font-semibold text-foreground max-w-[120px] truncate">
+                    {profile?.full_name || user.email}
+                  </span>
+                </Link>
+                <button onClick={signOut} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all">
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">{t('login')}</Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="glass" size="sm">{t('signup')}</Button>
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 
         {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden p-2 text-foreground"
-        >
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 text-foreground">
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
@@ -109,12 +125,25 @@ const Header = () => {
               </button>
 
               <div className="flex gap-2 pt-2 border-t border-border/30">
-                <Link to="/login" className="flex-1" onClick={() => setMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full">{t('login')}</Button>
-                </Link>
-                <Link to="/signup" className="flex-1" onClick={() => setMenuOpen(false)}>
-                  <Button variant="glass" className="w-full">{t('signup')}</Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/account" className="flex-1" onClick={() => setMenuOpen(false)}>
+                      <Button variant="glass" className="w-full">{t('account')}</Button>
+                    </Link>
+                    <Button variant="ghost" className="flex-1" onClick={() => { signOut(); setMenuOpen(false); }}>
+                      {t('logout')}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="flex-1" onClick={() => setMenuOpen(false)}>
+                      <Button variant="ghost" className="w-full">{t('login')}</Button>
+                    </Link>
+                    <Link to="/signup" className="flex-1" onClick={() => setMenuOpen(false)}>
+                      <Button variant="glass" className="w-full">{t('signup')}</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>
