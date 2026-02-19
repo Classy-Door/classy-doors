@@ -76,7 +76,7 @@ const Account = () => {
     return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-muted-foreground">...</div></div>;
   }
 
-  const currentOrder = orders.find(o => o.status !== 'done');
+  const currentOrders = orders.filter(o => o.status !== 'done');
   const pastOrders = orders.filter(o => o.status === 'done');
 
   return (
@@ -127,21 +127,24 @@ const Account = () => {
             )}
           </div>
 
-          {/* Current Order */}
-          {currentOrder && (
-            <div className="liquid-glass rounded-2xl p-6 mb-6">
+          {/* Current Orders */}
+          {currentOrders.length > 0 && currentOrders.map(order => (
+            <div key={order.id} className="liquid-glass rounded-2xl p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground">{t('currentOrder')}</h2>
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusColor(currentOrder.status)}`}>
-                  {statusLabel(currentOrder.status)}
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">{t('currentOrder')}</h2>
+                  <p className="text-xs text-muted-foreground mt-1">#{order.order_number}</p>
+                </div>
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusColor(order.status)}`}>
+                  {statusLabel(order.status)}
                 </span>
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>{language === 'ar' ? 'الإجمالي' : 'Total'}: {currentOrder.total} {language === 'ar' ? 'ج.م' : 'EGP'}</p>
-                <p>{new Date(currentOrder.created_at).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
+                <p>{language === 'ar' ? 'الإجمالي' : 'Total'}: {order.total} {language === 'ar' ? 'ج.م' : 'EGP'}</p>
+                <p>{new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
               </div>
             </div>
-          )}
+          ))}
 
           {/* Past Orders Button */}
           <Button variant="glass" className="w-full rounded-xl" onClick={() => setShowPastOrders(!showPastOrders)}>
