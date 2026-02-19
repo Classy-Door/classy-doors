@@ -42,10 +42,10 @@ const Checkout = () => {
       const orderItems = items.flatMap(item => {
         const entries = [];
         if (item.quantity_right > 0) {
-          entries.push({ order_id: order.id, door_id: item.door_id, quantity: item.quantity_right, price: item.price, direction: 'right' as const });
+          entries.push({ order_id: order.id, door_id: item.door_id, quantity: item.quantity_right, price: item.price, direction: 'right' as const, door_number: item.door_number });
         }
         if (item.quantity_left > 0) {
-          entries.push({ order_id: order.id, door_id: item.door_id, quantity: item.quantity_left, price: item.price, direction: 'left' as const });
+          entries.push({ order_id: order.id, door_id: item.door_id, quantity: item.quantity_left, price: item.price, direction: 'left' as const, door_number: item.door_number });
         }
         return entries;
       });
