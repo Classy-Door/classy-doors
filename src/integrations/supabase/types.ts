@@ -67,6 +67,7 @@ export type Database = {
           created_at: string
           direction: Database["public"]["Enums"]["door_direction"]
           door_id: string
+          door_number: string
           id: string
           order_id: string
           price: number
@@ -76,6 +77,7 @@ export type Database = {
           created_at?: string
           direction?: Database["public"]["Enums"]["door_direction"]
           door_id: string
+          door_number?: string
           id?: string
           order_id: string
           price?: number
@@ -85,6 +87,7 @@ export type Database = {
           created_at?: string
           direction?: Database["public"]["Enums"]["door_direction"]
           door_id?: string
+          door_number?: string
           id?: string
           order_id?: string
           price?: number
@@ -112,6 +115,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          order_number: number | null
           phone: string
           status: Database["public"]["Enums"]["order_status"]
           total: number
@@ -122,6 +126,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          order_number?: number | null
           phone?: string
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
@@ -132,6 +137,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          order_number?: number | null
           phone?: string
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
