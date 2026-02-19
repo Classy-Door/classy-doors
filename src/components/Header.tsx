@@ -23,7 +23,7 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 liquid-glass border-b-0" style={{ border: 'none' }}>
+    <header className="fixed top-0 left-0 right-0 z-50" style={{ background: 'rgba(255, 255, 255, 0.12)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
