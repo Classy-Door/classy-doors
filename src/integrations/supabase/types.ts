@@ -70,6 +70,7 @@ export type Database = {
           door_number: string
           id: string
           order_id: string
+          order_number: number | null
           price: number
           quantity: number
         }
@@ -80,6 +81,7 @@ export type Database = {
           door_number?: string
           id?: string
           order_id: string
+          order_number?: number | null
           price?: number
           quantity?: number
         }
@@ -90,6 +92,7 @@ export type Database = {
           door_number?: string
           id?: string
           order_id?: string
+          order_number?: number | null
           price?: number
           quantity?: number
         }
