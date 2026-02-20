@@ -1,6 +1,6 @@
 import { MessageCircle } from 'lucide-react';
 
-const WHATSAPP_URL = 'https://wa.me/201550190587?text=Can%20I%20Know%20more%20about%20Turkish%20doors';
+const WHATSAPP_URL = 'https://wa.me/201550190587?text=كنت%20عايز%20أستفسر%20عن%20الأبواب%20المصفحة';
 
 const WhatsAppButton = () => {
   return (

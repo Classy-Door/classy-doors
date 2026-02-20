@@ -108,7 +108,7 @@ const Verification = () => {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-5 rounded-xl bg-destructive/10 border border-destructive/30">
               <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
               <p className="text-sm text-destructive font-semibold">{t('doorNotFound')}</p>
-              <a href="https://wa.me/201550190587" target="_blank" rel="noopener noreferrer" className="inline-block mt-3">
+              <a href="https://wa.me/201550190587?text=كنت%20عايز%20أستفسر%20عن%20الأبواب%20المصفحة" target="_blank" rel="noopener noreferrer" className="inline-block mt-3">
                 <Button variant="outline" size="sm">{t('contactUs')}</Button>
               </a>
             </motion.div>
