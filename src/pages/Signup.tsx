@@ -175,7 +175,11 @@ const Signup = () => {
                       type="tel"
                       dir="ltr"
                       value={form.phone}
-                      onChange={(e) => updateForm('phone', e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        updateForm('phone', val);
+                      }}
+                      maxLength={11}
                       className="w-full bg-background/50 border border-border rounded-xl py-3 ps-11 pe-4 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
                       placeholder="01XXXXXXXXX"
                     />
@@ -191,6 +195,14 @@ const Signup = () => {
                       toast({
                         title: language === 'ar' ? 'خطأ' : 'Error',
                         description: language === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill in all fields',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    if (form.phone.length !== 11) {
+                      toast({
+                        title: language === 'ar' ? 'خطأ' : 'Error',
+                        description: language === 'ar' ? 'رقم الهاتف يجب أن يكون ١١ رقم' : 'Phone number must be 11 digits',
                         variant: 'destructive',
                       });
                       return;
