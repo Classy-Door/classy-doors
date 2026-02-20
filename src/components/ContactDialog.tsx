@@ -14,6 +14,7 @@ const locations = [
     key: 'shorouk',
     phones: ['01550190587', '01022230829'],
     mapUrl: 'https://maps.app.goo.gl/ueqAAXEpUpWn4yPJ8?g_st=ac',
+    embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3451.0!2d31.63!3d30.15!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDA5JzAwLjAiTiAzMcKwMzcnNDguMCJF!5e0!3m2!1sar!2seg!4v1700000000000',
     descriptionAr: 'تقاطع طريق اسماعيلية الصحراوى مع الإقليمى',
     descriptionEn: 'Intersection of Ismailia Desert Road and Regional Road',
   },
@@ -21,6 +22,7 @@ const locations = [
     key: 'giza',
     phones: ['01022230831', '01140039220'],
     mapUrl: 'https://maps.app.goo.gl/oaRguJP9kqHA1yun7?g_st=ac',
+    embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.0!2d31.13!3d29.98!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjnCsDU4JzQ4LjAiTiAzMcKwMDcnNDguMCJF!5e0!3m2!1sar!2seg!4v1700000000000',
     descriptionAr: 'نزلة الطريق السياحى - الدائري',
     descriptionEn: 'Tourist Road Exit - Ring Road',
   },
@@ -90,12 +92,13 @@ const ContactDialog = ({ open, onClose }: ContactDialogProps) => {
                       rel="noopener noreferrer"
                       className="block rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors group"
                     >
-                      <div className="h-40 bg-muted flex items-center justify-center gap-2 group-hover:bg-primary/5 transition-colors">
-                        <MapPin className="w-6 h-6 text-primary" />
-                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                          {language === 'ar' ? 'اضغط لفتح الخريطة' : 'Click to open map'}
-                        </span>
-                      </div>
+                      <iframe
+                        src={locations[activeTab].embedUrl}
+                        className="w-full h-40 pointer-events-none"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title={locations[activeTab].key}
+                      />
                     </a>
 
                     {/* Address */}
