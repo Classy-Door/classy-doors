@@ -5,6 +5,7 @@ import { User, Mail, Phone, Lock, ArrowLeft, ArrowRight, Check } from 'lucide-re
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import companyLogo from '@/assets/company_logo.jpg';
 
@@ -31,24 +32,22 @@ const Signup = () => {
 
   const handleSignup = async () => {
     if (form.password !== form.confirmPassword) {
-      toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match',
-        variant: 'destructive',
-      });
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match', variant: 'destructive' });
       return;
     }
-
     if (form.password.length < 6) {
-      toast({
-        title: language === 'ar' ? 'خطأ' : 'Error',
-        description: language === 'ar' ? 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل' : 'Password must be at least 6 characters',
-        variant: 'destructive',
-      });
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل' : 'Password must be at least 6 characters', variant: 'destructive' });
       return;
     }
 
+    // Check phone uniqueness
     setLoading(true);
+    const { data: existingPhone } = await supabase.rpc('get_email_by_phone', { phone_input: form.phone });
+    if (existingPhone) {
+      setLoading(false);
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'رقم الهاتف مستخدم بالفعل' : 'This phone number is already registered', variant: 'destructive' });
+      return;
+    }
     const { error } = await signUp({
       email: form.email,
       password: form.password,

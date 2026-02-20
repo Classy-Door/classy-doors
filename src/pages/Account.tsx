@@ -42,6 +42,16 @@ const Account = () => {
 
   const handleSave = async () => {
     if (!user) return;
+
+    // Check phone uniqueness if changed
+    if (form.phone && form.phone !== profile?.phone) {
+      const { data: existingPhone } = await supabase.rpc('get_email_by_phone', { phone_input: form.phone });
+      if (existingPhone) {
+        toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'رقم الهاتف مستخدم بالفعل' : 'This phone number is already in use', variant: 'destructive' });
+        return;
+      }
+    }
+
     const { error } = await supabase.from('profiles').update({
       full_name: form.full_name,
       phone: form.phone,
