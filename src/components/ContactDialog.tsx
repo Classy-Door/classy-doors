@@ -22,7 +22,7 @@ const locations = [
     key: 'giza',
     phones: ['01022230831', '01140039220'],
     mapUrl: 'https://maps.app.goo.gl/oaRguJP9kqHA1yun7?g_st=ac',
-    embedUrl: 'https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=place_id:ChIJoaGhweLGSBQRr93omBA0EhI&zoom=15',
+    embedUrl: 'https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Kafr+Al+Manfi+sakara+Rd,Giza+Governorate,Egypt&zoom=15',
     descriptionAr: 'نزلة الطريق السياحى - الدائري',
     descriptionEn: 'Tourist Road Exit - Ring Road',
   },
