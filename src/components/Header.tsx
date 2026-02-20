@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe, LogOut } from 'lucide-react';
+import { Menu, X, Globe, LogOut, Shield } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import userLogo from '@/assets/userlogo.jpg';
 
 const Header = () => {
   const { t, language, setLanguage } = useLanguage();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -62,6 +62,11 @@ const Header = () => {
           <div className="flex items-center gap-2 ms-2">
             {user ? (
               <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <Link to="/admin" className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-all" title="Admin">
+                    <Shield className="w-5 h-5" />
+                  </Link>
+                )}
                 <Link to="/account" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                   <img src={userLogo} alt="User" className="w-8 h-8 rounded-full object-cover" />
                   <span className="text-sm font-semibold text-foreground max-w-[120px] truncate">
@@ -127,6 +132,11 @@ const Header = () => {
               <div className="flex gap-2 pt-2 border-t border-border/30">
                 {user ? (
                   <>
+                    {isAdmin && (
+                      <Link to="/admin" className="flex-1" onClick={() => setMenuOpen(false)}>
+                        <Button variant="golden" className="w-full"><Shield className="w-4 h-4" /> Admin</Button>
+                      </Link>
+                    )}
                     <Link to="/account" className="flex-1" onClick={() => setMenuOpen(false)}>
                       <Button variant="glass" className="w-full">{t('account')}</Button>
                     </Link>
