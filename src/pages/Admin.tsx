@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Save, Trash2, Edit2, X, Upload } from 'lucide-react';
+import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
 
 type Door = Tables<'doors'>;
+type Order = Tables<'orders'>;
+type OrderItem = Tables<'order_items'>;
 
 const emptyDoor = {
   door_number: '',
@@ -27,36 +29,70 @@ const Admin = () => {
   const { language } = useLanguage();
   const { isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<'doors' | 'orders'>('doors');
+
+  // Door state
   const [doors, setDoors] = useState<Door[]>([]);
   const [editingDoor, setEditingDoor] = useState<Partial<Door> | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Order state
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+
   const fetchDoors = async () => {
     const { data } = await supabase.from('doors').select('*').order('created_at', { ascending: false });
     if (data) setDoors(data);
   };
 
-  useEffect(() => { fetchDoors(); }, []);
+  const fetchOrders = async () => {
+    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    if (data) setOrders(data);
+  };
+
+  const fetchOrderItems = async (orderId: string) => {
+    if (orderItems[orderId]) return;
+    const { data } = await supabase.from('order_items').select('*').eq('order_id', orderId);
+    if (data) setOrderItems(prev => ({ ...prev, [orderId]: data }));
+  };
+
+  useEffect(() => { fetchDoors(); fetchOrders(); }, []);
 
   if (authLoading) return <div className="min-h-screen bg-background pt-20 flex items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  const handleEdit = (door: Door) => {
-    setEditingDoor({ ...door });
-    setIsNew(false);
+  const handleToggleOrder = (orderId: string) => {
+    if (expandedOrder === orderId) {
+      setExpandedOrder(null);
+    } else {
+      setExpandedOrder(orderId);
+      fetchOrderItems(orderId);
+    }
   };
 
-  const handleNew = () => {
-    setEditingDoor({ ...emptyDoor });
-    setIsNew(true);
+  const handleUpdateStatus = async (orderId: string, newStatus: 'pending' | 'confirmed' | 'done') => {
+    setUpdatingOrder(orderId);
+    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '✓', description: language === 'ar' ? 'تم تحديث الحالة' : 'Status updated' });
+      if (newStatus === 'done') {
+        setOrderItems(prev => { const n = { ...prev }; delete n[orderId]; return n; });
+      }
+      fetchOrders();
+    }
+    setUpdatingOrder(null);
   };
 
-  const handleCancel = () => {
-    setEditingDoor(null);
-    setIsNew(false);
-  };
+  // Door handlers (kept as-is)
+  const handleEdit = (door: Door) => { setEditingDoor({ ...door }); setIsNew(false); };
+  const handleNew = () => { setEditingDoor({ ...emptyDoor }); setIsNew(true); };
+  const handleCancel = () => { setEditingDoor(null); setIsNew(false); };
 
   const handlePhotoUpload = async (file: File) => {
     if (!file) return;
@@ -77,45 +113,26 @@ const Admin = () => {
   const handleSave = async () => {
     if (!editingDoor) return;
     setSaving(true);
-
     if (isNew) {
       const { error } = await supabase.from('doors').insert({
-        door_number: editingDoor.door_number || '',
-        unique_code: editingDoor.unique_code || '',
-        price: Number(editingDoor.price) || 0,
-        category: editingDoor.category || 'I',
-        width: editingDoor.width || '10',
-        tag: editingDoor.tag || 'nothing',
-        description: editingDoor.description || '',
-        in_stock: editingDoor.in_stock ?? true,
+        door_number: editingDoor.door_number || '', unique_code: editingDoor.unique_code || '',
+        price: Number(editingDoor.price) || 0, category: editingDoor.category || 'I',
+        width: editingDoor.width || '10', tag: editingDoor.tag || 'nothing',
+        description: editingDoor.description || '', in_stock: editingDoor.in_stock ?? true,
         photo_url: editingDoor.photo_url || '',
       });
-      if (error) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      } else {
-        toast({ title: '✓', description: 'Door created' });
-        handleCancel();
-        fetchDoors();
-      }
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      else { toast({ title: '✓', description: 'Door created' }); handleCancel(); fetchDoors(); }
     } else {
       const { error } = await supabase.from('doors').update({
-        door_number: editingDoor.door_number,
-        unique_code: editingDoor.unique_code,
-        price: Number(editingDoor.price),
-        category: editingDoor.category,
-        width: editingDoor.width,
-        tag: editingDoor.tag,
-        description: editingDoor.description,
-        in_stock: editingDoor.in_stock,
+        door_number: editingDoor.door_number, unique_code: editingDoor.unique_code,
+        price: Number(editingDoor.price), category: editingDoor.category,
+        width: editingDoor.width, tag: editingDoor.tag,
+        description: editingDoor.description, in_stock: editingDoor.in_stock,
         photo_url: editingDoor.photo_url,
       }).eq('id', editingDoor.id!);
-      if (error) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      } else {
-        toast({ title: '✓', description: 'Door updated' });
-        handleCancel();
-        fetchDoors();
-      }
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      else { toast({ title: '✓', description: 'Door updated' }); handleCancel(); fetchDoors(); }
     }
     setSaving(false);
   };
@@ -123,16 +140,22 @@ const Admin = () => {
   const handleDelete = async (id: string) => {
     if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الباب؟' : 'Are you sure you want to delete this door?')) return;
     const { error } = await supabase.from('doors').delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: '✓', description: 'Door deleted' });
-      fetchDoors();
-    }
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    else { toast({ title: '✓', description: 'Door deleted' }); fetchDoors(); }
   };
 
   const updateField = (field: string, value: any) => {
     setEditingDoor(prev => prev ? { ...prev, [field]: value } : prev);
+  };
+
+  const statusLabel = (status: string) => {
+    const map: Record<string, { ar: string; en: string; cls: string }> = {
+      pending: { ar: 'في الانتظار', en: 'Pending', cls: 'bg-yellow-500/20 text-yellow-700' },
+      confirmed: { ar: 'مؤكد', en: 'Confirmed', cls: 'bg-blue-500/20 text-blue-700' },
+      done: { ar: 'مكتمل', en: 'Done', cls: 'bg-primary/20 text-primary' },
+    };
+    const s = map[status] || map.pending;
+    return <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.cls}`}>{language === 'ar' ? s.ar : s.en}</span>;
   };
 
   return (
@@ -142,168 +165,203 @@ const Admin = () => {
           <h1 className="text-3xl font-bold text-foreground font-playfair">
             {language === 'ar' ? 'لوحة التحكم' : 'Admin Panel'}
           </h1>
-          <Button variant="golden" onClick={handleNew} className="rounded-xl">
-            <Plus className="w-4 h-4" />
-            {language === 'ar' ? 'باب جديد' : 'New Door'}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8">
+          <Button variant={activeTab === 'doors' ? 'golden' : 'glass'} className="rounded-xl" onClick={() => setActiveTab('doors')}>
+            <DoorOpen className="w-4 h-4" />
+            {language === 'ar' ? 'الأبواب' : 'Doors'}
+          </Button>
+          <Button variant={activeTab === 'orders' ? 'golden' : 'glass'} className="rounded-xl" onClick={() => setActiveTab('orders')}>
+            <Package className="w-4 h-4" />
+            {language === 'ar' ? 'الطلبات' : 'Orders'}
           </Button>
         </div>
 
-        {/* Edit/Create Form */}
-        {editingDoor && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-6 shadow-lg mb-8 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">
-                {isNew ? (language === 'ar' ? 'إضافة باب جديد' : 'Add New Door') : (language === 'ar' ? 'تعديل الباب' : 'Edit Door')}
-              </h2>
-              <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
-                <X className="w-5 h-5" />
-              </button>
+        {/* DOORS TAB */}
+        {activeTab === 'doors' && (
+          <>
+            <div className="flex justify-end mb-6">
+              <Button variant="golden" onClick={handleNew} className="rounded-xl">
+                <Plus className="w-4 h-4" />
+                {language === 'ar' ? 'باب جديد' : 'New Door'}
+              </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'رقم الباب' : 'Door Number'}
-                </label>
-                <input value={editingDoor.door_number || ''} onChange={(e) => updateField('door_number', e.target.value)}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'الكود الفريد' : 'Unique Code'}
-                </label>
-                <input value={editingDoor.unique_code || ''} onChange={(e) => updateField('unique_code', e.target.value)} maxLength={5}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'السعر (ج.م)' : 'Price (EGP)'}
-                </label>
-                <input type="number" value={editingDoor.price || 0} onChange={(e) => updateField('price', Number(e.target.value))}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'الفئة' : 'Category'}
-                </label>
-                <select value={editingDoor.category || 'I'} onChange={(e) => updateField('category', e.target.value)}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
-                  <option value="I">I</option>
-                  <option value="F">F</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'السُمك' : 'Width'}
-                </label>
-                <select value={editingDoor.width || '10'} onChange={(e) => updateField('width', e.target.value)}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
-                  <option value="10">10 cm</option>
-                  <option value="11">11 cm</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'العلامة' : 'Tag'}
-                </label>
-                <select value={editingDoor.tag || 'nothing'} onChange={(e) => updateField('tag', e.target.value)}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
-                  <option value="nothing">{language === 'ar' ? 'بدون' : 'None'}</option>
-                  <option value="special_promotion">{language === 'ar' ? 'عرض خاص' : 'Special Promotion'}</option>
-                  <option value="best_seller">{language === 'ar' ? 'الأكثر مبيعًا' : 'Best Seller'}</option>
-                  <option value="newly_added">{language === 'ar' ? 'مضاف حديثًا' : 'Newly Added'}</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'الوصف' : 'Description'}
-                </label>
-                <textarea value={editingDoor.description || ''} onChange={(e) => updateField('description', e.target.value)} rows={3}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary resize-none" />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'الحالة' : 'Stock Status'}
-                </label>
-                <select value={editingDoor.in_stock ? 'true' : 'false'} onChange={(e) => updateField('in_stock', e.target.value === 'true')}
-                  className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
-                  <option value="true">{language === 'ar' ? 'متوفر' : 'In Stock'}</option>
-                  <option value="false">{language === 'ar' ? 'غير متوفر' : 'Out of Stock'}</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground block mb-1">
-                  {language === 'ar' ? 'صورة الباب' : 'Door Photo'}
-                </label>
-                <div className="flex items-center gap-3">
-                  {editingDoor.photo_url && (
-                    <img src={editingDoor.photo_url} alt="Door" className="w-16 h-20 rounded-lg object-cover" />
-                  )}
-                  <label className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl cursor-pointer hover:bg-muted/80 transition-colors">
-                    <Upload className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{uploading ? (language === 'ar' ? 'جاري الرفع...' : 'Uploading...') : (language === 'ar' ? 'رفع صورة' : 'Upload')}</span>
-                    <input type="file" accept="image/*" className="hidden" disabled={uploading}
-                      onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }} />
-                  </label>
+            {editingDoor && (
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-6 shadow-lg mb-8 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-foreground">
+                    {isNew ? (language === 'ar' ? 'إضافة باب جديد' : 'Add New Door') : (language === 'ar' ? 'تعديل الباب' : 'Edit Door')}
+                  </h2>
+                  <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
                 </div>
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'رقم الباب' : 'Door Number'}</label>
+                    <input value={editingDoor.door_number || ''} onChange={(e) => updateField('door_number', e.target.value)} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'الكود الفريد' : 'Unique Code'}</label>
+                    <input value={editingDoor.unique_code || ''} onChange={(e) => updateField('unique_code', e.target.value)} maxLength={5} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'السعر (ج.م)' : 'Price (EGP)'}</label>
+                    <input type="number" value={editingDoor.price || 0} onChange={(e) => updateField('price', Number(e.target.value))} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'الفئة' : 'Category'}</label>
+                    <select value={editingDoor.category || 'I'} onChange={(e) => updateField('category', e.target.value)} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
+                      <option value="I">I</option><option value="F">F</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'السُمك' : 'Width'}</label>
+                    <select value={editingDoor.width || '10'} onChange={(e) => updateField('width', e.target.value)} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
+                      <option value="10">10 cm</option><option value="11">11 cm</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'العلامة' : 'Tag'}</label>
+                    <select value={editingDoor.tag || 'nothing'} onChange={(e) => updateField('tag', e.target.value)} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
+                      <option value="nothing">{language === 'ar' ? 'بدون' : 'None'}</option>
+                      <option value="special_promotion">{language === 'ar' ? 'عرض خاص' : 'Special Promotion'}</option>
+                      <option value="best_seller">{language === 'ar' ? 'الأكثر مبيعًا' : 'Best Seller'}</option>
+                      <option value="newly_added">{language === 'ar' ? 'مضاف حديثًا' : 'Newly Added'}</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'الوصف' : 'Description'}</label>
+                    <textarea value={editingDoor.description || ''} onChange={(e) => updateField('description', e.target.value)} rows={3} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary resize-none" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'الحالة' : 'Stock Status'}</label>
+                    <select value={editingDoor.in_stock ? 'true' : 'false'} onChange={(e) => updateField('in_stock', e.target.value === 'true')} className="w-full bg-muted rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary">
+                      <option value="true">{language === 'ar' ? 'متوفر' : 'In Stock'}</option>
+                      <option value="false">{language === 'ar' ? 'غير متوفر' : 'Out of Stock'}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'صورة الباب' : 'Door Photo'}</label>
+                    <div className="flex items-center gap-3">
+                      {editingDoor.photo_url && <img src={editingDoor.photo_url} alt="Door" className="w-16 h-20 rounded-lg object-cover" />}
+                      <label className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl cursor-pointer hover:bg-muted/80 transition-colors">
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">{uploading ? (language === 'ar' ? 'جاري الرفع...' : 'Uploading...') : (language === 'ar' ? 'رفع صورة' : 'Upload')}</span>
+                        <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(e.target.files[0]); }} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button variant="golden" className="rounded-xl" onClick={handleSave} disabled={saving || !editingDoor.unique_code}>
+                    <Save className="w-4 h-4" />
+                    {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (language === 'ar' ? 'حفظ' : 'Save')}
+                  </Button>
+                  <Button variant="ghost" className="rounded-xl" onClick={handleCancel}>{language === 'ar' ? 'إلغاء' : 'Cancel'}</Button>
+                </div>
+              </motion.div>
+            )}
 
-            <div className="flex gap-3 pt-2">
-              <Button variant="golden" className="rounded-xl" onClick={handleSave} disabled={saving || !editingDoor.unique_code}>
-                <Save className="w-4 h-4" />
-                {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (language === 'ar' ? 'حفظ' : 'Save')}
-              </Button>
-              <Button variant="ghost" className="rounded-xl" onClick={handleCancel}>
-                {language === 'ar' ? 'إلغاء' : 'Cancel'}
-              </Button>
+            <div className="space-y-3">
+              {doors.map((door) => (
+                <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl p-4 shadow-md flex items-center gap-4">
+                  <div className="w-16 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
+                    {door.photo_url ? <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-xs">No img</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-foreground">{door.category}-{door.door_number}</p>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${door.in_stock ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
+                        {door.in_stock ? (language === 'ar' ? 'متوفر' : 'In Stock') : (language === 'ar' ? 'غير متوفر' : 'Out of Stock')}
+                      </span>
+                      {door.tag !== 'nothing' && <span className="text-xs bg-secondary/20 text-secondary-foreground px-2 py-0.5 rounded-full">{door.tag}</span>}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'كود' : 'Code'}: {door.unique_code} · {Number(door.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'} · {door.width}cm
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => handleEdit(door)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={() => handleDelete(door.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </motion.div>
+              ))}
+              {doors.length === 0 && <div className="text-center py-20"><p className="text-muted-foreground">{language === 'ar' ? 'لا توجد أبواب' : 'No doors yet'}</p></div>}
             </div>
-          </motion.div>
+          </>
         )}
 
-        {/* Door List */}
-        <div className="space-y-3">
-          {doors.map((door) => (
-            <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="bg-card rounded-2xl p-4 shadow-md flex items-center gap-4">
-              <div className="w-16 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
-                {door.photo_url ? (
-                  <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-xs">No img</div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-bold text-foreground">{door.category}-{door.door_number}</p>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${door.in_stock ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}`}>
-                    {door.in_stock ? (language === 'ar' ? 'متوفر' : 'In Stock') : (language === 'ar' ? 'غير متوفر' : 'Out of Stock')}
-                  </span>
-                  {door.tag !== 'nothing' && (
-                    <span className="text-xs bg-secondary/20 text-secondary-foreground px-2 py-0.5 rounded-full">{door.tag}</span>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'كود' : 'Code'}: {door.unique_code} · {Number(door.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'} · {door.width}cm
-                </p>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => handleEdit(door)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors">
-                  <Edit2 className="w-4 h-4" />
+        {/* ORDERS TAB */}
+        {activeTab === 'orders' && (
+          <div className="space-y-3">
+            {orders.map((order) => (
+              <motion.div key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl shadow-md overflow-hidden">
+                <button onClick={() => handleToggleOrder(order.id)} className="w-full p-4 flex items-center gap-4 text-start hover:bg-muted/30 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="font-bold text-foreground">#{order.order_number}</p>
+                      {statusLabel(order.status)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {order.email} · {order.phone}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {Number(order.total).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'} · {new Date(order.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <X className={`w-4 h-4 text-muted-foreground transition-transform ${expandedOrder === order.id ? 'rotate-0' : 'rotate-45'}`} />
                 </button>
-                <button onClick={() => handleDelete(door.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
 
-          {doors.length === 0 && (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground">{language === 'ar' ? 'لا توجد أبواب' : 'No doors yet'}</p>
-            </div>
-          )}
-        </div>
+                {expandedOrder === order.id && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border-t border-border px-4 pb-4">
+                    {/* Order items */}
+                    <div className="mt-3 space-y-2">
+                      {(orderItems[order.id] || []).map((item) => (
+                        <div key={item.id} className="flex items-center justify-between bg-muted/50 rounded-xl px-4 py-2">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {language === 'ar' ? `باب ${item.door_number}` : `Door ${item.door_number}`}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {language === 'ar' ? 'اتجاه' : 'Direction'}: {item.direction} · {language === 'ar' ? 'كمية' : 'Qty'}: {item.quantity}
+                            </p>
+                          </div>
+                          <p className="text-sm font-bold text-foreground">
+                            {Number(item.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
+                          </p>
+                        </div>
+                      ))}
+                      {!orderItems[order.id] && <p className="text-sm text-muted-foreground py-2">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>}
+                      {orderItems[order.id]?.length === 0 && <p className="text-sm text-muted-foreground py-2">{language === 'ar' ? 'تم حذف العناصر (مكتمل)' : 'Items deleted (order done)'}</p>}
+                    </div>
+
+                    {/* Status update buttons */}
+                    <div className="mt-4 flex gap-2 flex-wrap">
+                      {order.status !== 'pending' && (
+                        <Button size="sm" variant="outline" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'pending')}>
+                          {language === 'ar' ? 'في الانتظار' : 'Pending'}
+                        </Button>
+                      )}
+                      {order.status !== 'confirmed' && (
+                        <Button size="sm" variant="secondary" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'confirmed')}>
+                          {language === 'ar' ? 'تأكيد' : 'Confirm'}
+                        </Button>
+                      )}
+                      {order.status !== 'done' && (
+                        <Button size="sm" variant="golden" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'done')}>
+                          {language === 'ar' ? 'مكتمل' : 'Done'}
+                        </Button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+            {orders.length === 0 && <div className="text-center py-20"><p className="text-muted-foreground">{language === 'ar' ? 'لا توجد طلبات' : 'No orders yet'}</p></div>}
+          </div>
+        )}
       </div>
     </div>
   );
