@@ -4,9 +4,10 @@ import { Search, SlidersHorizontal, ShoppingCart, X, Plus, Minus } from 'lucide-
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 type DoorTag = 'special_promotion' | 'best_seller' | 'newly_added' | 'nothing';
 
@@ -19,8 +20,18 @@ const Shop = () => {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [filterWidth, setFilterWidth] = useState<string | null>(null);
   const [filterTag, setFilterTag] = useState<string | null>(null);
-  // Track add-to-cart quantities per door
+  const [filterStock, setFilterStock] = useState<string | null>(null);
   const [doorQuantities, setDoorQuantities] = useState<Record<string, { right: number; left: number }>>({});
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    // Apply filter from URL params
+    const tagParam = searchParams.get('tag');
+    if (tagParam) {
+      setFilterTag(tagParam);
+      setShowFilters(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchDoors = async () => {
@@ -35,16 +46,24 @@ const Shop = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const filteredDoors = doors.filter((door) => {
-    const matchesSearch = !searchQuery ||
-      door.door_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      door.unique_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (door.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !filterCategory || door.category === filterCategory;
-    const matchesWidth = !filterWidth || door.width === filterWidth;
-    const matchesTag = !filterTag || door.tag === filterTag;
-    return matchesSearch && matchesCategory && matchesWidth && matchesTag;
-  });
+  const filteredDoors = doors
+    .filter((door) => {
+      const matchesSearch = !searchQuery ||
+        door.door_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        door.unique_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (door.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !filterCategory || door.category === filterCategory;
+      const matchesWidth = !filterWidth || door.width === filterWidth;
+      const matchesTag = !filterTag || door.tag === filterTag;
+      const matchesStock = !filterStock || (filterStock === 'in_stock' ? door.in_stock : !door.in_stock);
+      return matchesSearch && matchesCategory && matchesWidth && matchesTag && matchesStock;
+    })
+    .sort((a, b) => {
+      // In-stock doors first
+      if (a.in_stock && !b.in_stock) return -1;
+      if (!a.in_stock && b.in_stock) return 1;
+      return 0;
+    });
 
   const tagLabel = (tag: DoorTag) => {
     const labels: Record<DoorTag, { ar: string; en: string }> = {
@@ -89,7 +108,7 @@ const Shop = () => {
     setDoorQuantities(prev => ({ ...prev, [door.id]: { right: 0, left: 0 } }));
   };
 
-  const hasActiveFilters = filterCategory || filterWidth || filterTag;
+  const hasActiveFilters = filterCategory || filterWidth || filterTag || filterStock;
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -148,8 +167,21 @@ const Shop = () => {
                   ))}
                 </div>
               </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-2">{language === 'ar' ? 'التوفر' : 'Availability'}</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setFilterStock(filterStock === 'in_stock' ? null : 'in_stock')}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filterStock === 'in_stock' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                    {language === 'ar' ? 'متوفر' : 'In Stock'}
+                  </button>
+                  <button onClick={() => setFilterStock(filterStock === 'out_of_stock' ? null : 'out_of_stock')}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filterStock === 'out_of_stock' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                    {language === 'ar' ? 'غير متوفر' : 'Out of Stock'}
+                  </button>
+                </div>
+              </div>
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={() => { setFilterCategory(null); setFilterWidth(null); setFilterTag(null); }} className="text-destructive">
+                <Button variant="ghost" size="sm" onClick={() => { setFilterCategory(null); setFilterWidth(null); setFilterTag(null); setFilterStock(null); }} className="text-destructive">
                   <X className="w-4 h-4" /> {language === 'ar' ? 'مسح الفلاتر' : 'Clear Filters'}
                 </Button>
               )}
@@ -162,15 +194,22 @@ const Shop = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredDoors.map((door, i) => {
               const qty = getQty(door.id);
+              const isOutOfStock = !door.in_stock;
               return (
                 <motion.div key={door.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05, duration: 0.4 }}
-                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group relative">
+                  className={`bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group relative ${isOutOfStock ? 'opacity-60' : ''}`}>
                   {door.tag !== 'nothing' && (
                     <div className={`absolute top-3 start-3 z-10 ${tagColor(door.tag as DoorTag)} text-primary-foreground text-xs font-bold px-3 py-1 rounded-full`}>
                       {tagLabel(door.tag as DoorTag)}
                     </div>
                   )}
+                  {/* Stock badge */}
+                  <div className={`absolute top-3 end-3 z-10 text-xs font-bold px-3 py-1 rounded-full ${isOutOfStock ? 'bg-destructive text-destructive-foreground' : 'bg-primary text-primary-foreground'}`}>
+                    {isOutOfStock
+                      ? (language === 'ar' ? 'غير متوفر' : 'Out of Stock')
+                      : (language === 'ar' ? 'متوفر' : 'In Stock')}
+                  </div>
                   <div className="aspect-[3/4] bg-muted overflow-hidden">
                     {door.photo_url ? (
                       <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -194,44 +233,49 @@ const Shop = () => {
                       {Number(door.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
                     </p>
 
-                    {/* Quantity selectors */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">
-                          {language === 'ar' ? 'يمين' : 'Right'} ({language === 'ar' ? `متاح: ${door.quantity_right}` : `Avail: ${door.quantity_right}`})
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => setQty(door.id, 'right', -1)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-sm font-bold w-6 text-center">{qty.right}</span>
-                          <button onClick={() => { if (qty.right < door.quantity_right) setQty(door.id, 'right', 1); }}
-                            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
-                            <Plus className="w-3 h-3" />
-                          </button>
+                    {/* Quantity selectors - no limits */}
+                    {!isOutOfStock && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-foreground">
+                            {language === 'ar' ? 'يمين' : 'Right'}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setQty(door.id, 'right', -1)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-sm font-bold w-6 text-center">{qty.right}</span>
+                            <button onClick={() => setQty(door.id, 'right', 1)}
+                              className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-foreground">
+                            {language === 'ar' ? 'يسار' : 'Left'}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setQty(door.id, 'left', -1)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-sm font-bold w-6 text-center">{qty.left}</span>
+                            <button onClick={() => setQty(door.id, 'left', 1)}
+                              className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">
-                          {language === 'ar' ? 'يسار' : 'Left'} ({language === 'ar' ? `متاح: ${door.quantity_left}` : `Avail: ${door.quantity_left}`})
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => setQty(door.id, 'left', -1)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-sm font-bold w-6 text-center">{qty.left}</span>
-                          <button onClick={() => { if (qty.left < door.quantity_left) setQty(door.id, 'left', 1); }}
-                            className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80">
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    )}
 
                     <Button variant="golden" size="sm" className="w-full rounded-xl"
-                      disabled={qty.right === 0 && qty.left === 0}
+                      disabled={isOutOfStock || (qty.right === 0 && qty.left === 0)}
                       onClick={() => handleAddToCart(door)}>
-                      <ShoppingCart className="w-4 h-4" /> {t('addToCart')}
+                      <ShoppingCart className="w-4 h-4" />
+                      {isOutOfStock
+                        ? (language === 'ar' ? 'غير متوفر' : 'Out of Stock')
+                        : t('addToCart')}
                     </Button>
                   </div>
                 </motion.div>
@@ -261,6 +305,8 @@ const Shop = () => {
           )}
         </Button>
       </Link>
+
+      <WhatsAppButton />
     </div>
   );
 };
