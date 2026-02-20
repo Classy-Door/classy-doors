@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, ArrowRight, ChevronDown, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import ContactDialog from '@/components/ContactDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import heroImage from '@/assets/hero-door.jpg';
-import companyLogo from '@/assets/company_logo.jpg';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -45,13 +45,8 @@ const Index = () => {
           <div className="hero-overlay absolute inset-0" />
         </div>
 
-
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            className="max-w-3xl mx-auto"
-          >
+          <motion.div initial="hidden" animate="visible" className="max-w-3xl mx-auto">
             <motion.div variants={fadeUp} custom={0} className="flex justify-center mb-6">
               <div className="flex items-center gap-2 liquid-glass px-4 py-2 rounded-full">
                 <ShieldCheck className="w-5 h-5 text-secondary" />
@@ -61,19 +56,11 @@ const Index = () => {
               </div>
             </motion.div>
 
-            <motion.h1
-              variants={fadeUp}
-              custom={1}
-              className="text-5xl md:text-7xl font-black text-background mb-4 font-playfair leading-tight"
-            >
+            <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-7xl font-black text-background mb-4 font-playfair leading-tight">
               {t('heroTitle')}
             </motion.h1>
 
-            <motion.p
-              variants={fadeUp}
-              custom={2}
-              className="text-xl md:text-2xl text-background/80 mb-8 font-cairo"
-            >
+            <motion.p variants={fadeUp} custom={2} className="text-xl md:text-2xl text-background/80 mb-8 font-cairo">
               {t('heroSubtitle')}
             </motion.p>
 
@@ -94,12 +81,7 @@ const Index = () => {
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 12, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
+        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2" animate={{ y: [0, 12, 0] }} transition={{ duration: 2, repeat: Infinity }}>
           <ChevronDown className="w-8 h-8 text-background/50" />
         </motion.div>
       </section>
@@ -107,25 +89,14 @@ const Index = () => {
       {/* ABOUT US */}
       <section id="about" className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto"
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-8 justify-center">
               <div className="h-px flex-1 max-w-16 bg-secondary" />
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair text-center">
-                {t('aboutUs')}
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair text-center">{t('aboutUs')}</h2>
               <div className="h-px flex-1 max-w-16 bg-secondary" />
             </div>
-
             <div className="liquid-glass rounded-2xl p-8 md:p-12">
-              <p className="text-foreground/80 leading-loose text-lg text-center">
-                {t('aboutText')}
-              </p>
+              <p className="text-foreground/80 leading-loose text-lg text-center">{t('aboutText')}</p>
             </div>
           </motion.div>
         </div>
@@ -134,30 +105,17 @@ const Index = () => {
       {/* SHOP PREVIEW */}
       <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-3 mb-12 justify-center">
               <div className="h-px flex-1 max-w-16 bg-secondary" />
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair text-center">
-                {t('ourDoors')}
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair text-center">{t('ourDoors')}</h2>
               <div className="h-px flex-1 max-w-16 bg-secondary" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {doors.length > 0 ? doors.map((door, i) => (
-                <motion.div
-                  key={door.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group"
-                >
+                <motion.div key={door.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group">
                   <div className="aspect-[3/4] bg-muted overflow-hidden">
                     {door.photo_url ? (
                       <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -177,39 +135,21 @@ const Index = () => {
                   </div>
                 </motion.div>
               )) : [1, 2, 3].map((i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group"
-                >
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group">
                   <div className="aspect-[3/4] bg-muted flex items-center justify-center">
                     <ShieldCheck className="w-16 h-16 text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
                   </div>
                   <div className="p-4">
-                    <p className="text-sm font-bold text-foreground">
-                      {language === 'ar' ? `باب تركي ${i}` : `Turkish Door ${i}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {language === 'ar' ? 'قريبًا' : 'Coming Soon'}
-                    </p>
+                    <p className="text-sm font-bold text-foreground">{language === 'ar' ? `باب تركي ${i}` : `Turkish Door ${i}`}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{language === 'ar' ? 'قريبًا' : 'Coming Soon'}</p>
                   </div>
                 </motion.div>
               ))}
 
               {/* View More */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-              >
-                <Link
-                  to="/shop"
-                  className="h-full min-h-[320px] bg-primary/10 rounded-2xl flex flex-col items-center justify-center gap-4 border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/15 transition-all group"
-                >
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4, duration: 0.5 }}>
+                <Link to="/shop" className="h-full min-h-[320px] bg-primary/10 rounded-2xl flex flex-col items-center justify-center gap-4 border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/15 transition-all group">
                   <ArrowIcon className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
                   <span className="text-lg font-bold text-primary">{t('viewMore')}</span>
                 </Link>
@@ -219,24 +159,37 @@ const Index = () => {
         </div>
       </section>
 
-      {/* VERIFY YOUR DOOR */}
+      {/* SPECIAL OFFERS */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-2xl mx-auto text-center"
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-2xl mx-auto text-center">
+            <div className="liquid-glass rounded-2xl p-10 md:p-14 border border-secondary/30">
+              <Sparkles className="w-14 h-14 text-secondary mx-auto mb-6" />
+              <h2 className="text-3xl font-bold text-foreground mb-4 font-playfair">
+                {language === 'ar' ? 'عروض خاصة' : 'Special Offers'}
+              </h2>
+              <p className="text-muted-foreground mb-8 text-lg">
+                {language === 'ar' ? 'اكتشف أبوابنا المميزة بأسعار مخفضة لفترة محدودة' : 'Discover our featured doors at special prices for a limited time'}
+              </p>
+              <Link to="/shop?tag=special_promotion">
+                <Button variant="golden" size="lg" className="text-lg px-8 py-6 rounded-xl">
+                  {language === 'ar' ? 'عرض العروض' : 'View Offers'}
+                  <ArrowIcon className="w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* VERIFY YOUR DOOR */}
+      <section className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-2xl mx-auto text-center">
             <div className="liquid-glass-dark rounded-2xl p-10 md:p-14">
               <ShieldCheck className="w-14 h-14 text-secondary mx-auto mb-6" />
-              <h2 className="text-3xl font-bold text-primary-foreground mb-4 font-playfair">
-                {t('verifyDoor')}
-              </h2>
-              <p className="text-primary-foreground/70 mb-8 text-lg">
-                {t('verifyDesc')}
-              </p>
+              <h2 className="text-3xl font-bold text-primary-foreground mb-4 font-playfair">{t('verifyDoor')}</h2>
+              <p className="text-primary-foreground/70 mb-8 text-lg">{t('verifyDesc')}</p>
               <Link to="/verification">
                 <Button variant="golden" size="lg" className="text-lg px-8 py-6 rounded-xl">
                   {t('verifyNow')}
@@ -249,24 +202,11 @@ const Index = () => {
       </section>
 
       {/* CONTACT US */}
-      <section id="contact" className="py-20 bg-muted/50">
+      <section id="contact" className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair mb-6">
-              {t('contactUs')}
-            </h2>
-            <Button
-              variant="glass"
-              size="lg"
-              className="text-lg px-8 py-6 rounded-xl"
-              onClick={() => setContactOpen(true)}
-            >
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair mb-6">{t('contactUs')}</h2>
+            <Button variant="glass" size="lg" className="text-lg px-8 py-6 rounded-xl" onClick={() => setContactOpen(true)}>
               {t('contactUs')}
               <MapPinIcon className="w-5 h-5" />
             </Button>
@@ -275,6 +215,7 @@ const Index = () => {
       </section>
 
       <ContactDialog open={contactOpen} onClose={() => setContactOpen(false)} />
+      <WhatsAppButton />
     </>
   );
 };

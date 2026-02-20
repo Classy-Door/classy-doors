@@ -21,10 +21,9 @@ export type Database = {
           description: string | null
           door_number: string
           id: string
+          in_stock: boolean
           photo_url: string | null
           price: number
-          quantity_left: number
-          quantity_right: number
           tag: Database["public"]["Enums"]["door_tag"]
           unique_code: string
           updated_at: string
@@ -36,10 +35,9 @@ export type Database = {
           description?: string | null
           door_number?: string
           id?: string
+          in_stock?: boolean
           photo_url?: string | null
           price?: number
-          quantity_left?: number
-          quantity_right?: number
           tag?: Database["public"]["Enums"]["door_tag"]
           unique_code: string
           updated_at?: string
@@ -51,10 +49,9 @@ export type Database = {
           description?: string | null
           door_number?: string
           id?: string
+          in_stock?: boolean
           photo_url?: string | null
           price?: number
-          quantity_left?: number
-          quantity_right?: number
           tag?: Database["public"]["Enums"]["door_tag"]
           unique_code?: string
           updated_at?: string
