@@ -17,6 +17,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [placedOrderNumber, setPlacedOrderNumber] = useState<number | null>(null);
 
   const handleConfirmOrder = async () => {
     if (!user || !profile) {
@@ -56,6 +57,7 @@ const Checkout = () => {
       }
 
       clearCart();
+      setPlacedOrderNumber(order.order_number);
       setOrderPlaced(true);
     } catch (err: any) {
       toast({ title: language === 'ar' ? 'حدث خطأ' : 'Error', description: err?.message || 'Something went wrong', variant: 'destructive' });
@@ -72,9 +74,13 @@ const Checkout = () => {
           <h1 className="text-3xl font-bold text-foreground mb-4 font-playfair">
             {language === 'ar' ? 'تم تأكيد طلبك!' : 'Order Confirmed!'}
           </h1>
+          <div className="text-center mb-4">
+            <p className="text-muted-foreground text-sm mb-1">{language === 'ar' ? 'رقم الطلب' : 'Order Number'}</p>
+            <p className="text-5xl font-bold text-primary font-playfair">#{placedOrderNumber}</p>
+          </div>
           <div className="bg-card rounded-2xl p-6 shadow-lg mb-6">
             <p className="text-muted-foreground mb-6">{t('orderConfirmMsg')}</p>
-            <a href="https://wa.me/201550190587?text=Can%20I%20Know%20more%20about%20my%20order" target="_blank" rel="noopener noreferrer">
+            <a href={`https://wa.me/201550190587?text=Can%20you%20check%20my%20order%20-%20${placedOrderNumber}`} target="_blank" rel="noopener noreferrer">
               <Button variant="golden" size="lg" className="rounded-xl w-full mb-3">
                 WhatsApp
               </Button>

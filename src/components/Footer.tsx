@@ -1,15 +1,18 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import companyLogo from '@/assets/company_logo.jpg';
+import ContactDialog from '@/components/ContactDialog';
 
 const Footer = () => {
   const { t } = useLanguage();
+  const [contactOpen, setContactOpen] = useState(false);
 
   const footerLinks = [
     { key: 'home', path: '/' },
     { key: 'shop', path: '/shop' },
     { key: 'verifyYourDoor', path: '/verification' },
-    { key: 'contactUs', path: '/#contact' },
+    { key: 'contactUs', path: null },
   ];
 
   const socialLinks = [
@@ -64,13 +67,23 @@ const Footer = () => {
             <h3 className="font-bold text-background mb-4 text-lg">{t('classyDoor')}</h3>
             <nav className="flex flex-col gap-2">
               {footerLinks.map((link) => (
-                <Link
-                  key={link.key}
-                  to={link.path}
-                  className="text-background/60 hover:text-secondary transition-colors text-sm"
-                >
-                  {t(link.key)}
-                </Link>
+                link.path ? (
+                  <Link
+                    key={link.key}
+                    to={link.path}
+                    className="text-background/60 hover:text-secondary transition-colors text-sm"
+                  >
+                    {t(link.key)}
+                  </Link>
+                ) : (
+                  <button
+                    key={link.key}
+                    onClick={() => setContactOpen(true)}
+                    className="text-background/60 hover:text-secondary transition-colors text-sm text-start"
+                  >
+                    {t(link.key)}
+                  </button>
+                )
               ))}
             </nav>
           </div>
@@ -99,6 +112,7 @@ const Footer = () => {
           © 2026 {t('classyDoor')}. {t('allRightsReserved')}.
         </div>
       </div>
+      <ContactDialog open={contactOpen} onClose={() => setContactOpen(false)} />
     </footer>
   );
 };

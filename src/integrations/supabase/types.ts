@@ -190,7 +190,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_email_by_phone: { Args: { phone_input: string }; Returns: string }
     }
     Enums: {
       door_category: "I" | "F"

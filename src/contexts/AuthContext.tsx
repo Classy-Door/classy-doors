@@ -98,21 +98,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       return { error };
     } else {
-      // For phone login, we need to find the email associated with the phone
-      // Since Supabase doesn't support phone+password login natively without phone auth,
-      // we'll search profiles for the phone number and get the email
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('phone', emailOrPhone)
-        .single();
+      // For phone login, use a secure database function to look up the email
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_email_by_phone', { phone_input: emailOrPhone });
       
-      if (!profileData?.email) {
+      if (rpcError || !rpcData) {
         return { error: { message: 'No account found with this phone number' } };
       }
 
       const { error } = await supabase.auth.signInWithPassword({
-        email: profileData.email,
+        email: rpcData,
         password,
       });
       return { error };

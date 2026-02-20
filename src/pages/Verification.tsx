@@ -129,12 +129,7 @@ const Verification = () => {
                     </div>
                   </div>
 
-                  <div className="bg-muted rounded-xl p-3 text-center">
-                    <p className="text-xs text-muted-foreground">{language === 'ar' ? 'السعر' : 'Price'}</p>
-                    <p className="text-lg font-bold text-primary">
-                      {Number(foundDoor.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
-                    </p>
-                  </div>
+
 
                   <div className="flex items-center gap-2 pt-2 justify-center">
                     <ShieldCheck className="w-5 h-5 text-primary" />
