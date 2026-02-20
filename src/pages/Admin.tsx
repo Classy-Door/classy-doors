@@ -43,6 +43,7 @@ const Admin = () => {
   const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'done'>('all');
 
   const fetchDoors = async () => {
     const { data } = await supabase.from('doors').select('*').order('created_at', { ascending: false });
@@ -296,7 +297,32 @@ const Admin = () => {
         {/* ORDERS TAB */}
         {activeTab === 'orders' && (
           <div className="space-y-3">
-            {orders.map((order) => (
+            {/* Status Filter */}
+            <div className="flex gap-2 flex-wrap mb-4">
+              {(['all', 'pending', 'confirmed', 'done'] as const).map((s) => {
+                const labels: Record<string, { ar: string; en: string }> = {
+                  all: { ar: 'الكل', en: 'All' },
+                  pending: { ar: 'في الانتظار', en: 'Pending' },
+                  confirmed: { ar: 'مؤكد', en: 'Confirmed' },
+                  done: { ar: 'مكتمل', en: 'Done' },
+                };
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                      statusFilter === s
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {language === 'ar' ? labels[s].ar : labels[s].en}
+                  </button>
+                );
+              })}
+            </div>
+
+            {orders.filter(o => statusFilter === 'all' || o.status === statusFilter).map((order) => (
               <motion.div key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl shadow-md overflow-hidden">
                 <button onClick={() => handleToggleOrder(order.id)} className="w-full p-4 flex items-center gap-4 text-start hover:bg-muted/30 transition-colors">
                   <div className="flex-1 min-w-0">
@@ -359,7 +385,7 @@ const Admin = () => {
                 )}
               </motion.div>
             ))}
-            {orders.length === 0 && <div className="text-center py-20"><p className="text-muted-foreground">{language === 'ar' ? 'لا توجد طلبات' : 'No orders yet'}</p></div>}
+            {orders.filter(o => statusFilter === 'all' || o.status === statusFilter).length === 0 && <div className="text-center py-20"><p className="text-muted-foreground">{language === 'ar' ? 'لا توجد طلبات' : 'No orders found'}</p></div>}
           </div>
         )}
       </div>
