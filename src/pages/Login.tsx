@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,9 @@ const Login = () => {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resolvedEmail, setResolvedEmail] = useState('');
 
   const handleLogin = async () => {
     if (!emailOrPhone || !password) {
@@ -36,14 +40,23 @@ const Login = () => {
     if (error) {
       const msg = error.message?.toLowerCase() || '';
       if (msg.includes('email not confirmed')) {
+        // Resolve the email for resend (if they logged in with phone)
+        let email = emailOrPhone;
+        if (!emailOrPhone.includes('@')) {
+          const { data } = await supabase.rpc('get_email_by_phone', { phone_input: emailOrPhone });
+          if (data) email = data;
+        }
+        setResolvedEmail(email);
+        setShowResend(true);
         toast({
           title: language === 'ar' ? 'تأكيد البريد' : 'Email Not Confirmed',
           description: language === 'ar'
-            ? 'يجب تأكيد بريدك الإلكتروني أولاً. يرجى التحقق من بريدك.'
-            : 'You need to confirm your email first. Please check your inbox.',
+            ? 'يجب تأكيد بريدك الإلكتروني أولاً. يمكنك إعادة إرسال رسالة التأكيد.'
+            : 'You need to confirm your email first. You can resend the confirmation below.',
           variant: 'destructive',
         });
       } else {
+        setShowResend(false);
         toast({
           title: language === 'ar' ? 'خطأ' : 'Error',
           description: language === 'ar'
@@ -55,7 +68,21 @@ const Login = () => {
       return;
     }
 
+    setShowResend(false);
     navigate('/');
+  };
+
+  const handleResend = async () => {
+    if (!resolvedEmail) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({ type: 'signup', email: resolvedEmail });
+    setResending(false);
+    if (error) {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: language === 'ar' ? 'تم الإرسال' : 'Sent!', description: language === 'ar' ? 'تم إرسال رسالة التأكيد. تحقق من بريدك الإلكتروني.' : 'Confirmation email sent. Check your inbox.' });
+      setShowResend(false);
+    }
   };
 
   return (
@@ -111,6 +138,21 @@ const Login = () => {
               {loading ? (language === 'ar' ? 'جاري الدخول...' : 'Signing in...') : t('login')}
               <ArrowIcon className="w-5 h-5" />
             </Button>
+
+            {showResend && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full rounded-xl"
+                onClick={handleResend}
+                disabled={resending}
+              >
+                <RefreshCw className={`w-4 h-4 ${resending ? 'animate-spin' : ''}`} />
+                {resending
+                  ? (language === 'ar' ? 'جاري الإرسال...' : 'Sending...')
+                  : (language === 'ar' ? 'إعادة إرسال رسالة التأكيد' : 'Resend Confirmation Email')}
+              </Button>
+            )}
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
