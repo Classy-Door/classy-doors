@@ -23,6 +23,7 @@ const Index = () => {
   const { t, language } = useLanguage();
   const [contactOpen, setContactOpen] = useState(false);
   const [doors, setDoors] = useState<Tables<'doors'>[]>([]);
+  const [specialDoors, setSpecialDoors] = useState<Tables<'doors'>[]>([]);
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
   useEffect(() => {
@@ -33,7 +34,16 @@ const Index = () => {
         .limit(3);
       if (data) setDoors(data);
     };
+    const fetchSpecialDoors = async () => {
+      const { data } = await supabase
+        .from('doors')
+        .select('*')
+        .eq('tag', 'special_promotion')
+        .limit(3);
+      if (data) setSpecialDoors(data);
+    };
     fetchDoors();
+    fetchSpecialDoors();
   }, []);
 
   return (
@@ -162,21 +172,57 @@ const Index = () => {
       {/* SPECIAL OFFERS */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-2xl mx-auto text-center">
-            <div className="liquid-glass rounded-2xl p-10 md:p-14 border border-secondary/30">
-              <Sparkles className="w-14 h-14 text-secondary mx-auto mb-6" />
-              <h2 className="text-3xl font-bold text-foreground mb-4 font-playfair">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+            <div className="flex items-center gap-3 mb-12 justify-center">
+              <div className="h-px flex-1 max-w-16 bg-secondary" />
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground font-playfair text-center">
                 {language === 'ar' ? 'عروض خاصة' : 'Special Offers'}
               </h2>
-              <p className="text-muted-foreground mb-8 text-lg">
-                {language === 'ar' ? 'اكتشف أبوابنا المميزة بأسعار مخفضة لفترة محدودة' : 'Discover our featured doors at special prices for a limited time'}
-              </p>
-              <Link to="/shop?tag=special_promotion">
-                <Button variant="golden" size="lg" className="text-lg px-8 py-6 rounded-xl">
-                  {language === 'ar' ? 'عرض العروض' : 'View Offers'}
-                  <ArrowIcon className="w-5 h-5" />
-                </Button>
-              </Link>
+              <div className="h-px flex-1 max-w-16 bg-secondary" />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {specialDoors.length > 0 ? specialDoors.map((door, i) => (
+                <motion.div key={door.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group">
+                  <div className="aspect-[3/4] bg-muted overflow-hidden">
+                    {door.photo_url ? (
+                      <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Sparkles className="w-16 h-16 text-muted-foreground/30" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-bold text-foreground">
+                      {language === 'ar' ? `باب ${door.door_number}` : `Door ${door.door_number}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {door.price.toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
+                    </p>
+                  </div>
+                </motion.div>
+              )) : [1, 2, 3].map((i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group">
+                  <div className="aspect-[3/4] bg-muted flex items-center justify-center">
+                    <Sparkles className="w-16 h-16 text-muted-foreground/30 group-hover:text-secondary/40 transition-colors" />
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-bold text-foreground">{language === 'ar' ? `عرض خاص ${i}` : `Special Offer ${i}`}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{language === 'ar' ? 'قريبًا' : 'Coming Soon'}</p>
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* View More */}
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4, duration: 0.5 }}>
+                <Link to="/shop?tag=special_promotion" className="h-full min-h-[320px] bg-secondary/10 rounded-2xl flex flex-col items-center justify-center gap-4 border-2 border-dashed border-secondary/30 hover:border-secondary/60 hover:bg-secondary/15 transition-all group">
+                  <ArrowIcon className="w-10 h-10 text-secondary group-hover:scale-110 transition-transform" />
+                  <span className="text-lg font-bold text-secondary">{t('viewMore')}</span>
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
         </div>
