@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  isAdmin: boolean;
   signUp: (data: { email: string; password: string; fullName: string; phone: string }) => Promise<{ error: any }>;
   signIn: (data: { emailOrPhone: string; password: string }) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -42,32 +44,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const fetchRole = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+    setIsAdmin(!!data);
+  };
+
   const refreshProfile = async () => {
     if (user) await fetchProfile(user.id);
   };
 
   useEffect(() => {
-    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          // Use setTimeout to avoid Supabase deadlock
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+            fetchRole(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
+          setIsAdmin(false);
         }
         setLoading(false);
       }
     );
 
-    // THEN get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        fetchRole(session.user.id);
       }
       setLoading(false);
     });
@@ -88,28 +102,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async ({ emailOrPhone, password }: { emailOrPhone: string; password: string }) => {
-    // Determine if input is email or phone
     const isEmail = emailOrPhone.includes('@');
-    
     if (isEmail) {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailOrPhone,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email: emailOrPhone, password });
       return { error };
     } else {
-      // For phone login, use a secure database function to look up the email
-      const { data: rpcData, error: rpcError } = await supabase
-        .rpc('get_email_by_phone', { phone_input: emailOrPhone });
-      
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_email_by_phone', { phone_input: emailOrPhone });
       if (rpcError || !rpcData) {
         return { error: { message: 'No account found with this phone number' } };
       }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: rpcData,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email: rpcData, password });
       return { error };
     }
   };
@@ -117,10 +119,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setIsAdmin(false);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, isAdmin, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
