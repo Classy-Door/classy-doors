@@ -5,7 +5,7 @@ import companyLogo from '@/assets/company_logo.jpg';
 import ContactDialog from '@/components/ContactDialog';
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [contactOpen, setContactOpen] = useState(false);
 
   const footerLinks = [
@@ -109,7 +109,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-10 pt-6 border-t border-background/10 text-center text-background/40 text-sm space-y-1">
-          <p>الرقم الضريبي: 329-540-939</p>
+          <p>{language === 'ar' ? 'الرقم الضريبي' : 'Tax Number'}: 329-540-939</p>
           <p>© 2026 {t('classyDoor')}. {t('allRightsReserved')}.</p>
         </div>
       </div>
