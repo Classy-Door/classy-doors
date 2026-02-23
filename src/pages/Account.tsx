@@ -69,6 +69,7 @@ const Account = () => {
     switch (status) {
       case 'confirmed': return 'bg-primary/15 text-primary';
       case 'done': return 'bg-green-100 text-green-700';
+      case 'canceled': return 'bg-destructive/15 text-destructive';
       default: return 'bg-secondary/50 text-secondary-foreground';
     }
   };
@@ -78,16 +79,28 @@ const Account = () => {
       pending: { ar: 'في انتظار التأكيد', en: 'Pending Confirmation' },
       confirmed: { ar: 'مؤكد', en: 'Confirmed' },
       done: { ar: 'مكتمل', en: 'Done' },
+      canceled: { ar: 'ملغي', en: 'Canceled' },
     };
     return labels[status]?.[language] || status;
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm(language === 'ar' ? 'هل أنت متأكد من إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?')) return;
+    const { error } = await supabase.from('orders').update({ status: 'canceled' as any }).eq('id', orderId);
+    if (error) {
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '✓', description: language === 'ar' ? 'تم إلغاء الطلب' : 'Order canceled' });
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'canceled' } : o));
+    }
   };
 
   if (loading || !user) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-muted-foreground">...</div></div>;
   }
 
-  const currentOrders = orders.filter(o => o.status !== 'done');
-  const pastOrders = orders.filter(o => o.status === 'done');
+  const currentOrders = orders.filter(o => o.status !== 'done' && o.status !== 'canceled');
+  const pastOrders = orders.filter(o => o.status === 'done' || o.status === 'canceled');
 
   return (
     <div className="min-h-screen bg-background py-12">
@@ -153,6 +166,11 @@ const Account = () => {
                 <p>{language === 'ar' ? 'الإجمالي' : 'Total'}: {order.total} {language === 'ar' ? 'ج.م' : 'EGP'}</p>
                 <p>{new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
               </div>
+              {order.status === 'pending' && (
+                <Button variant="destructive" size="sm" className="mt-3 rounded-xl" onClick={() => handleCancelOrder(order.id)}>
+                  {language === 'ar' ? 'إلغاء الطلب' : 'Cancel Order'}
+                </Button>
+              )}
             </div>
           ))}
 
