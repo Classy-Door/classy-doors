@@ -117,6 +117,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          hidden: boolean
           id: string
           order_number: number | null
           phone: string
@@ -128,6 +129,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string
+          hidden?: boolean
           id?: string
           order_number?: number | null
           phone?: string
@@ -139,6 +141,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          hidden?: boolean
           id?: string
           order_number?: number | null
           phone?: string

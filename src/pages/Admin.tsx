@@ -52,7 +52,7 @@ const Admin = () => {
 
   const fetchOrders = async () => {
     const { data } = await supabase.from('orders').select('*').neq('status', 'canceled' as any).order('created_at', { ascending: false });
-    if (data) setOrders(data);
+    if (data) setOrders((data as any[]).filter((o: any) => !o.hidden));
   };
 
   const fetchOrderItems = async (orderId: string) => {
@@ -93,7 +93,7 @@ const Admin = () => {
   const handleDeleteOrder = async (orderId: string) => {
     if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Are you sure you want to delete this order?')) return;
     setUpdatingOrder(orderId);
-    const { error } = await supabase.from('orders').update({ status: 'canceled' as any }).eq('id', orderId);
+    const { error } = await supabase.from('orders').update({ hidden: true } as any).eq('id', orderId);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
