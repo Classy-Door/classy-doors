@@ -43,7 +43,7 @@ const Admin = () => {
   const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'done'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'done' | 'canceled'>('all');
 
   const fetchDoors = async () => {
     const { data } = await supabase.from('doors').select('*').order('created_at', { ascending: false });
@@ -51,7 +51,7 @@ const Admin = () => {
   };
 
   const fetchOrders = async () => {
-    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('orders').select('*').neq('status', 'canceled' as any).order('created_at', { ascending: false });
     if (data) setOrders(data);
   };
 
@@ -75,7 +75,7 @@ const Admin = () => {
     }
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: 'pending' | 'confirmed' | 'done') => {
+  const handleUpdateStatus = async (orderId: string, newStatus: 'pending' | 'confirmed' | 'done' | 'canceled') => {
     setUpdatingOrder(orderId);
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) {
@@ -86,6 +86,20 @@ const Admin = () => {
         setOrderItems(prev => { const n = { ...prev }; delete n[orderId]; return n; });
       }
       fetchOrders();
+    }
+    setUpdatingOrder(null);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'Are you sure you want to delete this order?')) return;
+    setUpdatingOrder(orderId);
+    const { error } = await supabase.from('orders').update({ status: 'canceled' as any }).eq('id', orderId);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '✓', description: language === 'ar' ? 'تم حذف الطلب' : 'Order deleted' });
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      if (expandedOrder === orderId) setExpandedOrder(null);
     }
     setUpdatingOrder(null);
   };
@@ -154,6 +168,7 @@ const Admin = () => {
       pending: { ar: 'في الانتظار', en: 'Pending', cls: 'bg-yellow-500/20 text-yellow-700' },
       confirmed: { ar: 'مؤكد', en: 'Confirmed', cls: 'bg-blue-500/20 text-blue-700' },
       done: { ar: 'مكتمل', en: 'Done', cls: 'bg-primary/20 text-primary' },
+      canceled: { ar: 'ملغي', en: 'Canceled', cls: 'bg-destructive/20 text-destructive' },
     };
     const s = map[status] || map.pending;
     return <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.cls}`}>{language === 'ar' ? s.ar : s.en}</span>;
@@ -347,12 +362,13 @@ const Admin = () => {
           <div className="space-y-3">
             {/* Status Filter */}
             <div className="flex gap-2 flex-wrap mb-4">
-              {(['all', 'pending', 'confirmed', 'done'] as const).map((s) => {
+              {(['all', 'pending', 'confirmed', 'done', 'canceled'] as const).map((s) => {
                 const labels: Record<string, { ar: string; en: string }> = {
                   all: { ar: 'الكل', en: 'All' },
                   pending: { ar: 'في الانتظار', en: 'Pending' },
                   confirmed: { ar: 'مؤكد', en: 'Confirmed' },
                   done: { ar: 'مكتمل', en: 'Done' },
+                  canceled: { ar: 'ملغي', en: 'Canceled' },
                 };
                 return (
                   <button
@@ -413,21 +429,30 @@ const Admin = () => {
 
                     {/* Status update buttons */}
                     <div className="mt-4 flex gap-2 flex-wrap">
-                      {order.status !== 'pending' && (
+                      {order.status !== 'pending' && order.status !== 'canceled' && (
                         <Button size="sm" variant="outline" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'pending')}>
                           {language === 'ar' ? 'في الانتظار' : 'Pending'}
                         </Button>
                       )}
-                      {order.status !== 'confirmed' && (
+                      {order.status !== 'confirmed' && order.status !== 'canceled' && (
                         <Button size="sm" variant="secondary" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'confirmed')}>
                           {language === 'ar' ? 'تأكيد' : 'Confirm'}
                         </Button>
                       )}
-                      {order.status !== 'done' && (
+                      {order.status !== 'done' && order.status !== 'canceled' && (
                         <Button size="sm" variant="golden" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'done')}>
                           {language === 'ar' ? 'مكتمل' : 'Done'}
                         </Button>
                       )}
+                      {order.status !== 'canceled' && (
+                        <Button size="sm" variant="destructive" className="rounded-xl" disabled={updatingOrder === order.id} onClick={() => handleUpdateStatus(order.id, 'canceled' as any)}>
+                          {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="rounded-xl border-destructive text-destructive hover:bg-destructive/10" disabled={updatingOrder === order.id} onClick={() => handleDeleteOrder(order.id)}>
+                        <Trash2 className="w-3 h-3" />
+                        {language === 'ar' ? 'حذف' : 'Delete'}
+                      </Button>
                     </div>
                   </motion.div>
                 )}

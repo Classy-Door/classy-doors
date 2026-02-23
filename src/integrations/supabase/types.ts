@@ -223,7 +223,7 @@ export type Database = {
       door_direction: "right" | "left"
       door_tag: "special_promotion" | "best_seller" | "newly_added" | "nothing"
       door_width: "10" | "11"
-      order_status: "pending" | "confirmed" | "done"
+      order_status: "pending" | "confirmed" | "done" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -356,7 +356,7 @@ export const Constants = {
       door_direction: ["right", "left"],
       door_tag: ["special_promotion", "best_seller", "newly_added", "nothing"],
       door_width: ["10", "11"],
-      order_status: ["pending", "confirmed", "done"],
+      order_status: ["pending", "confirmed", "done", "canceled"],
     },
   },
 } as const
