@@ -117,8 +117,15 @@ const Checkout = () => {
         <div className="bg-card rounded-2xl p-6 shadow-lg space-y-4 mb-6">
           <h2 className="font-bold text-foreground text-lg">{language === 'ar' ? 'ملخص الطلب' : 'Order Summary'}</h2>
           {items.map(item => (
-            <div key={item.door_id} className="flex items-center justify-between text-sm border-b border-border pb-2">
-              <div>
+            <div key={item.door_id} className="flex items-center gap-3 text-sm border-b border-border pb-3">
+              <div className="w-12 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                {item.photo_url ? (
+                  <img src={item.photo_url} alt={`Door ${item.door_number}`} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-xs">—</div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground">
                   {language === 'ar' ? `باب ${item.door_number}` : `Door ${item.door_number}`}
                 </p>
@@ -128,7 +135,7 @@ const Checkout = () => {
                   {item.quantity_left > 0 && `${language === 'ar' ? 'يسار' : 'L'}: ${item.quantity_left}`}
                 </p>
               </div>
-              <span className="font-bold text-primary">
+              <span className="font-bold text-primary flex-shrink-0">
                 {(item.price * (item.quantity_right + item.quantity_left)).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
               </span>
             </div>
@@ -141,10 +148,8 @@ const Checkout = () => {
           </div>
         </div>
 
-        {/* Info message */}
-        <div className="bg-card rounded-2xl p-6 shadow-lg mb-6">
-          <p className="text-muted-foreground text-center">{t('orderConfirmMsg')}</p>
-        </div>
+
+
 
         <Button variant="golden" size="lg" className="w-full rounded-xl text-lg" disabled={submitting} onClick={handleConfirmOrder}>
           {submitting
