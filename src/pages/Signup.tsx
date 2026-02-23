@@ -198,10 +198,10 @@ const Signup = () => {
                       });
                       return;
                     }
-                    if (form.phone.length !== 11) {
+                    if (form.phone.length !== 11 || !form.phone.startsWith('01')) {
                       toast({
                         title: language === 'ar' ? 'خطأ' : 'Error',
-                        description: language === 'ar' ? 'رقم الهاتف يجب أن يكون ١١ رقم' : 'Phone number must be 11 digits',
+                        description: language === 'ar' ? 'رقم الهاتف يجب أن يكون ١١ رقم ويبدأ بـ 01' : 'Phone number must be 11 digits and start with 01',
                         variant: 'destructive',
                       });
                       return;
