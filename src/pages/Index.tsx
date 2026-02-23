@@ -31,6 +31,7 @@ const Index = () => {
       const { data } = await supabase
         .from('doors')
         .select('*')
+        .eq('featured', true)
         .limit(3);
       if (data) setDoors(data);
     };

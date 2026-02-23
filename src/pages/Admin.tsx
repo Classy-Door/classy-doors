@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen } from 'lucide-react';
+import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen, Star, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -265,6 +265,24 @@ const Admin = () => {
               </motion.div>
             )}
 
+            {/* Homepage Selection Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-card rounded-2xl p-4 shadow-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  <span className="font-bold text-foreground text-sm">{language === 'ar' ? 'أبوابنا (الصفحة الرئيسية)' : 'Our Doors (Homepage)'}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{doors.filter(d => d.featured).length}/3 {language === 'ar' ? 'مختار' : 'selected'}</p>
+              </div>
+              <div className="bg-card rounded-2xl p-4 shadow-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-secondary" />
+                  <span className="font-bold text-foreground text-sm">{language === 'ar' ? 'عروض خاصة (الصفحة الرئيسية)' : 'Special Offers (Homepage)'}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{doors.filter(d => d.tag === 'special_promotion').length}/3 {language === 'ar' ? 'مختار' : 'selected'}</p>
+              </div>
+            </div>
+
             <div className="space-y-3">
               {doors.map((door) => (
                 <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl p-4 shadow-md flex items-center gap-4">
@@ -278,12 +296,42 @@ const Admin = () => {
                         {door.in_stock ? (language === 'ar' ? 'متوفر' : 'In Stock') : (language === 'ar' ? 'غير متوفر' : 'Out of Stock')}
                       </span>
                       {door.tag !== 'nothing' && <span className="text-xs bg-secondary/20 text-secondary-foreground px-2 py-0.5 rounded-full">{door.tag}</span>}
+                      {door.featured && <span className="text-xs bg-yellow-500/20 text-yellow-700 px-2 py-0.5 rounded-full flex items-center gap-1"><Star className="w-3 h-3" />{language === 'ar' ? 'مميز' : 'Featured'}</span>}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {language === 'ar' ? 'كود' : 'Code'}: {door.unique_code} · {Number(door.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'} · {door.width}cm
                     </p>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button
+                      onClick={async () => {
+                        if (!door.featured && doors.filter(d => d.featured).length >= 3) {
+                          toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'الحد الأقصى ٣ أبواب في قسم أبوابنا' : 'Maximum 3 doors for Our Doors section', variant: 'destructive' });
+                          return;
+                        }
+                        await supabase.from('doors').update({ featured: !door.featured }).eq('id', door.id);
+                        fetchDoors();
+                      }}
+                      className={`p-2 rounded-lg transition-colors ${door.featured ? 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30' : 'hover:bg-muted text-muted-foreground'}`}
+                      title={language === 'ar' ? 'أبوابنا' : 'Our Doors'}
+                    >
+                      <Star className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const isPromo = door.tag === 'special_promotion';
+                        if (!isPromo && doors.filter(d => d.tag === 'special_promotion').length >= 3) {
+                          toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'الحد الأقصى ٣ أبواب في العروض الخاصة' : 'Maximum 3 doors for Special Offers', variant: 'destructive' });
+                          return;
+                        }
+                        await supabase.from('doors').update({ tag: isPromo ? 'nothing' : 'special_promotion' }).eq('id', door.id);
+                        fetchDoors();
+                      }}
+                      className={`p-2 rounded-lg transition-colors ${door.tag === 'special_promotion' ? 'bg-secondary/20 text-secondary hover:bg-secondary/30' : 'hover:bg-muted text-muted-foreground'}`}
+                      title={language === 'ar' ? 'عرض خاص' : 'Special Offer'}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                    </button>
                     <button onClick={() => handleEdit(door)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => handleDelete(door.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>

@@ -108,8 +108,9 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-background/10 text-center text-background/40 text-sm">
-          © 2026 {t('classyDoor')}. {t('allRightsReserved')}.
+        <div className="mt-10 pt-6 border-t border-background/10 text-center text-background/40 text-sm space-y-1">
+          <p>الرقم الضريبي: 329-540-939</p>
+          <p>© 2026 {t('classyDoor')}. {t('allRightsReserved')}.</p>
         </div>
       </div>
       <ContactDialog open={contactOpen} onClose={() => setContactOpen(false)} />

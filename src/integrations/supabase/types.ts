@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           description: string | null
           door_number: string
+          featured: boolean
           id: string
           in_stock: boolean
           photo_url: string | null
@@ -34,6 +35,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           door_number?: string
+          featured?: boolean
           id?: string
           in_stock?: boolean
           photo_url?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           door_number?: string
+          featured?: boolean
           id?: string
           in_stock?: boolean
           photo_url?: string | null
