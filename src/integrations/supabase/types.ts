@@ -211,6 +211,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_email_exists: { Args: { email_input: string }; Returns: boolean }
+      check_phone_exists: { Args: { phone_input: string }; Returns: boolean }
       get_email_by_phone: { Args: { phone_input: string }; Returns: string }
       has_role: {
         Args: {
