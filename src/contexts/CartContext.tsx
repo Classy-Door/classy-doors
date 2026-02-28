@@ -38,7 +38,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     const load = async () => {
-      const { data } = await supabase.from('profiles').select('cart_data').eq('id', user.id).single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('cart_data')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Failed to load cart data:', error);
+        return;
+      }
+
       if (data?.cart_data && Array.isArray(data.cart_data)) {
         setItems(data.cart_data as unknown as CartItem[]);
       }
