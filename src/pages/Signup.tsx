@@ -40,12 +40,20 @@ const Signup = () => {
       return;
     }
 
-    // Check phone uniqueness
+    // Check phone and email uniqueness
     setLoading(true);
-    const { data: existingPhone } = await supabase.rpc('get_email_by_phone', { phone_input: form.phone });
-    if (existingPhone) {
+    const [{ data: phoneExists }, { data: emailExists }] = await Promise.all([
+      supabase.rpc('check_phone_exists', { phone_input: form.phone }),
+      supabase.rpc('check_email_exists', { email_input: form.email }),
+    ]);
+    if (phoneExists) {
       setLoading(false);
       toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'رقم الهاتف مستخدم بالفعل' : 'This phone number is already registered', variant: 'destructive' });
+      return;
+    }
+    if (emailExists) {
+      setLoading(false);
+      toast({ title: language === 'ar' ? 'خطأ' : 'Error', description: language === 'ar' ? 'هذا البريد الإلكتروني مستخدم بالفعل' : 'This email is already registered', variant: 'destructive' });
       return;
     }
     const { error } = await signUp({
