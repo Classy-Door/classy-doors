@@ -108,8 +108,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-background/10 text-center text-background/40 text-sm space-y-1">
-          <p>{language === 'ar' ? 'الرقم الضريبي' : 'Tax Number'}: <span dir="ltr">329-540-939</span></p>
+        <div className="mt-10 pt-6 border-t border-background/10 text-center text-background/40 text-sm">
           <p>© 2026 {t('classyDoor')}. {t('allRightsReserved')}.</p>
         </div>
       </div>
