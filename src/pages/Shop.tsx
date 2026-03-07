@@ -198,7 +198,7 @@ const Shop = () => {
               return (
                 <motion.div key={door.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05, duration: 0.4 }}
-                  className={`bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group relative ${isOutOfStock ? 'opacity-60' : ''}`}>
+                  className={`bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group relative flex flex-col ${isOutOfStock ? 'opacity-60' : ''}`}>
                   {door.tag !== 'nothing' && (
                     <div className={`absolute top-3 start-3 z-10 ${tagColor(door.tag as DoorTag)} text-primary-foreground text-xs font-bold px-3 py-1 rounded-full`}>
                       {tagLabel(door.tag as DoorTag)}
@@ -219,7 +219,7 @@ const Shop = () => {
                       </div>
                     )}
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-4 flex flex-col flex-grow">
                     <div className="flex items-center justify-between">
                       <p className="text-base font-bold text-foreground">
                         {language === 'ar' ? `باب ${door.door_number}` : `Door ${door.door_number}`}
@@ -228,14 +228,19 @@ const Shop = () => {
                         {door.category} · {door.width}{language === 'ar' ? 'سم' : 'cm'}
                       </span>
                     </div>
-                    {door.description && <p className="text-xs text-muted-foreground line-clamp-2">{door.description}</p>}
-                    <p className="text-lg font-bold text-primary">
+                    <div className="min-h-[2.5rem] mt-2">
+                      {door.description && <p className="text-xs text-muted-foreground line-clamp-2">{door.description}</p>}
+                    </div>
+                    <p className="text-lg font-bold text-primary mt-2">
                       {Number(door.price).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
                     </p>
 
+                    {/* Spacer to push quantity + button to bottom */}
+                    <div className="flex-grow" />
+
                     {/* Quantity selectors - no limits */}
                     {!isOutOfStock && (
-                      <div className="space-y-2">
+                      <div className="space-y-2 mt-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-foreground">
                             {language === 'ar' ? 'يمين' : 'Right'}
@@ -269,7 +274,7 @@ const Shop = () => {
                       </div>
                     )}
 
-                    <Button variant="golden" size="sm" className="w-full rounded-xl"
+                    <Button variant="golden" size="sm" className="w-full rounded-xl mt-3"
                       disabled={isOutOfStock || (qty.right === 0 && qty.left === 0)}
                       onClick={() => handleAddToCart(door)}>
                       <ShoppingCart className="w-4 h-4" />
