@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShieldCheck, ArrowLeft, ArrowRight, ChevronDown, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import ContactDialog from '@/components/ContactDialog';
+import VerificationDialog from '@/components/VerificationDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import heroImage from '@/assets/hero-door.jpg';
@@ -24,6 +25,9 @@ const Index = () => {
   const [contactOpen, setContactOpen] = useState(false);
   const [doors, setDoors] = useState<Tables<'doors'>[]>([]);
   const [specialDoors, setSpecialDoors] = useState<Tables<'doors'>[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
   useEffect(() => {
@@ -45,6 +49,22 @@ const Index = () => {
     };
     fetchDoors();
     fetchSpecialDoors();
+  }, []);
+
+  // Auto-open verification dialog from URL ?code=
+  useEffect(() => {
+    let urlCode = searchParams.get('code');
+    if (!urlCode) {
+      const params = new URLSearchParams(window.location.search);
+      urlCode = params.get('code');
+    }
+    if (urlCode && urlCode.length >= 5) {
+      setVerifyCode(urlCode.replace(/\D/g, '').slice(0, 6));
+      setVerifyOpen(true);
+      // Clean the URL
+      searchParams.delete('code');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, []);
 
   return (
@@ -262,6 +282,7 @@ const Index = () => {
       </section>
 
       <ContactDialog open={contactOpen} onClose={() => setContactOpen(false)} />
+      <VerificationDialog open={verifyOpen} onClose={() => setVerifyOpen(false)} code={verifyCode} />
       <WhatsAppButton />
     </>
   );
