@@ -311,7 +311,7 @@ const Admin = () => {
 
             <div className="space-y-3">
               {doors.map((door) => (
-                <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl p-4 shadow-md flex items-center gap-4">
+                <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl p-4 shadow-md flex flex-wrap items-center gap-4">
                   <div className="w-16 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
                     {door.photo_url ? <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-xs">No img</div>}
                   </div>
