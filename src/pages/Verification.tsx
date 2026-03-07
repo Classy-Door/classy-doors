@@ -59,6 +59,7 @@ const Verification = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCode]);
 
+  const handleBarcodeScan = (scannedCode: string) => {
     setShowScanner(false);
     const cleaned = scannedCode.replace(/\D/g, '').slice(0, 6);
     if (cleaned.length >= 5) {
