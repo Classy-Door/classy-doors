@@ -32,6 +32,15 @@ const Verification = () => {
     if (input.length < 5) return;
     setLoading(true);
     setResult('idle');
+
+    // Special code check
+    if (input.slice(0, 6) === SPECIAL_CODE) {
+      setLoading(false);
+      setFoundDoor(null);
+      setResult('special');
+      return;
+    }
+
     const searchCode = input.slice(0, 5);
     const { data, error } = await supabase
       .from('doors')
