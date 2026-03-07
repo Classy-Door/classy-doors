@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, AlertCircle } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Camera } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import BarcodeScanner from '@/components/BarcodeScanner';
 
 const Verification = () => {
   const { t, language } = useLanguage();
@@ -13,12 +14,14 @@ const Verification = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<'idle' | 'found' | 'not_found'>('idle');
   const [foundDoor, setFoundDoor] = useState<Tables<'doors'> | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
-  const handleVerify = async () => {
-    if (code.length < 6) return;
+  const handleVerify = async (searchInput?: string) => {
+    const input = searchInput || code;
+    if (input.length < 5) return;
     setLoading(true);
     setResult('idle');
-    const searchCode = code.slice(0, 5);
+    const searchCode = input.slice(0, 5);
     const { data, error } = await supabase
       .from('doors')
       .select('*')
@@ -31,6 +34,15 @@ const Verification = () => {
     } else {
       setFoundDoor(null);
       setResult('not_found');
+    }
+  };
+
+  const handleBarcodeScan = (scannedCode: string) => {
+    setShowScanner(false);
+    const cleaned = scannedCode.replace(/\D/g, '').slice(0, 6);
+    setCode(cleaned);
+    if (cleaned.length >= 5) {
+      handleVerify(cleaned);
     }
   };
 
@@ -62,9 +74,14 @@ const Verification = () => {
               dir="ltr"
               className="w-full text-center text-4xl font-bold tracking-[0.5em] bg-transparent border-b-2 border-border focus:border-primary outline-none py-4 text-foreground placeholder:text-muted-foreground/30"
             />
-            <Button variant="golden" size="lg" className="w-full mt-6 rounded-xl" onClick={handleVerify} disabled={code.length < 6 || loading}>
-              {loading ? (language === 'ar' ? 'جارٍ البحث...' : 'Searching...') : t('verifyNow')}
-            </Button>
+            <div className="flex gap-3 mt-6">
+              <Button variant="golden" size="lg" className="flex-1 rounded-xl" onClick={() => handleVerify()} disabled={code.length < 5 || loading}>
+                {loading ? (language === 'ar' ? 'جارٍ البحث...' : 'Searching...') : t('verifyNow')}
+              </Button>
+              <Button variant="glass" size="lg" className="rounded-xl" onClick={() => setShowScanner(true)}>
+                <Camera className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
 
           {result === 'found' && foundDoor && (
@@ -115,6 +132,15 @@ const Verification = () => {
           )}
         </motion.div>
       </div>
+
+      {showScanner && (
+        <BarcodeScanner
+          language={language}
+          onScan={handleBarcodeScan}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       <WhatsAppButton />
     </div>
   );

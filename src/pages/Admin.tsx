@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen, Star, Sparkles } from 'lucide-react';
+import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen, Star, Sparkles, Barcode } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
+import BarcodeDisplay from '@/components/BarcodeDisplay';
 import { Navigate } from 'react-router-dom';
 
 type Door = Tables<'doors'>;
@@ -30,6 +31,7 @@ const Admin = () => {
   const { isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'doors' | 'orders'>('doors');
+  const [showBarcode, setShowBarcode] = useState<string | null>(null);
 
   // Door state
   const [doors, setDoors] = useState<Door[]>([]);
@@ -270,6 +272,15 @@ const Admin = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Barcode Preview */}
+                {editingDoor.unique_code && (
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'الباركود' : 'Barcode'}</label>
+                    <BarcodeDisplay code={editingDoor.unique_code} label={`${editingDoor.category || 'I'}-${editingDoor.door_number || ''}`} showDownload />
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <Button variant="golden" className="rounded-xl" onClick={handleSave} disabled={saving || !editingDoor.unique_code}>
                     <Save className="w-4 h-4" />
@@ -300,7 +311,7 @@ const Admin = () => {
 
             <div className="space-y-3">
               {doors.map((door) => (
-                <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl p-4 shadow-md flex items-center gap-4">
+                <motion.div key={door.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-2xl p-4 shadow-md flex flex-wrap items-center gap-4">
                   <div className="w-16 h-20 rounded-xl bg-muted overflow-hidden flex-shrink-0">
                     {door.photo_url ? <img src={door.photo_url} alt={`Door ${door.door_number}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-xs">No img</div>}
                   </div>
@@ -347,9 +358,17 @@ const Admin = () => {
                     >
                       <Sparkles className="w-4 h-4" />
                     </button>
+                    <button onClick={() => setShowBarcode(showBarcode === door.id ? null : door.id)} className={`p-2 rounded-lg transition-colors ${showBarcode === door.id ? 'bg-primary/20 text-primary' : 'hover:bg-muted text-muted-foreground'}`} title={language === 'ar' ? 'باركود' : 'Barcode'}>
+                      <Barcode className="w-4 h-4" />
+                    </button>
                     <button onClick={() => handleEdit(door)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => handleDelete(door.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
+                  {showBarcode === door.id && (
+                    <div className="w-full mt-3 pt-3 border-t border-border">
+                      <BarcodeDisplay code={door.unique_code} label={`${door.category}-${door.door_number}`} showDownload />
+                    </div>
+                  )}
                 </motion.div>
               ))}
               {doors.length === 0 && <div className="text-center py-20"><p className="text-muted-foreground">{language === 'ar' ? 'لا توجد أبواب' : 'No doors yet'}</p></div>}
