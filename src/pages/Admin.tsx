@@ -31,6 +31,7 @@ const Admin = () => {
   const { isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'doors' | 'orders'>('doors');
+  const [showBarcode, setShowBarcode] = useState<string | null>(null);
 
   // Door state
   const [doors, setDoors] = useState<Door[]>([]);
