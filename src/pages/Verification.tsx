@@ -18,7 +18,7 @@ const Verification = () => {
 
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
-    if (input.length < 5) return;
+    if (input.length !== 6) return;
     setLoading(true);
     setResult('idle');
     const searchCode = input.slice(0, 5);
@@ -40,7 +40,6 @@ const Verification = () => {
   const handleBarcodeScan = (scannedCode: string) => {
     setShowScanner(false);
     const cleaned = scannedCode.replace(/\D/g, '').slice(0, 6);
-    setCode(cleaned);
     if (cleaned.length >= 5) {
       handleVerify(cleaned);
     }
