@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShieldCheck, AlertCircle, Camera, BadgeCheck } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,6 +14,7 @@ const SPECIAL_CODE = '999999';
 const Verification = () => {
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<'idle' | 'found' | 'not_found' | 'special'>('idle');
