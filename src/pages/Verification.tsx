@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, AlertCircle, Camera } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Camera, BadgeCheck } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,13 +9,23 @@ import type { Tables } from '@/integrations/supabase/types';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import BarcodeScanner from '@/components/BarcodeScanner';
 
+const SPECIAL_CODE = '999999';
+
 const Verification = () => {
   const { t, language } = useLanguage();
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<'idle' | 'found' | 'not_found'>('idle');
+  const [result, setResult] = useState<'idle' | 'found' | 'not_found' | 'special'>('idle');
   const [foundDoor, setFoundDoor] = useState<Tables<'doors'> | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+
+  useEffect(() => {
+    const urlCode = searchParams.get('code');
+    if (urlCode && urlCode.length >= 5) {
+      handleVerify(urlCode);
+    }
+  }, []);
 
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
