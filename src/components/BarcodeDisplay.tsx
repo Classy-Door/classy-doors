@@ -20,7 +20,7 @@ const BarcodeDisplay = ({ code, label, showDownload = false, width = 2, height =
           format: 'CODE128',
           width,
           height,
-          displayValue: true,
+          displayValue: false,
           fontSize: 14,
           margin: 10,
           background: '#ffffff',

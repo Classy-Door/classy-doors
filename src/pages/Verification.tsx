@@ -18,7 +18,7 @@ const Verification = () => {
 
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
-    if (input.length < 5) return;
+    if (input.length !== 6) return;
     setLoading(true);
     setResult('idle');
     const searchCode = input.slice(0, 5);
@@ -40,7 +40,6 @@ const Verification = () => {
   const handleBarcodeScan = (scannedCode: string) => {
     setShowScanner(false);
     const cleaned = scannedCode.replace(/\D/g, '').slice(0, 6);
-    setCode(cleaned);
     if (cleaned.length >= 5) {
       handleVerify(cleaned);
     }
@@ -75,7 +74,7 @@ const Verification = () => {
               className="w-full text-center text-4xl font-bold tracking-[0.5em] bg-transparent border-b-2 border-border focus:border-primary outline-none py-4 text-foreground placeholder:text-muted-foreground/30"
             />
             <div className="flex gap-3 mt-6">
-              <Button variant="golden" size="lg" className="flex-1 rounded-xl" onClick={() => handleVerify()} disabled={code.length < 5 || loading}>
+              <Button variant="golden" size="lg" className="flex-1 rounded-xl" onClick={() => handleVerify()} disabled={code.length !== 6 || loading}>
                 {loading ? (language === 'ar' ? 'جارٍ البحث...' : 'Searching...') : t('verifyNow')}
               </Button>
               <Button variant="glass" size="lg" className="rounded-xl" onClick={() => setShowScanner(true)}>
