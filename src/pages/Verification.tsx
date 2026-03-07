@@ -20,12 +20,7 @@ const Verification = () => {
   const [foundDoor, setFoundDoor] = useState<Tables<'doors'> | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
-  useEffect(() => {
-    const urlCode = searchParams.get('code');
-    if (urlCode && urlCode.length >= 5) {
-      handleVerify(urlCode);
-    }
-  }, []);
+  const initialCode = searchParams.get('code');
 
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
