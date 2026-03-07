@@ -51,6 +51,22 @@ const Index = () => {
     fetchSpecialDoors();
   }, []);
 
+  // Auto-open verification dialog from URL ?code=
+  useEffect(() => {
+    let urlCode = searchParams.get('code');
+    if (!urlCode) {
+      const params = new URLSearchParams(window.location.search);
+      urlCode = params.get('code');
+    }
+    if (urlCode && urlCode.length >= 5) {
+      setVerifyCode(urlCode.replace(/\D/g, '').slice(0, 6));
+      setVerifyOpen(true);
+      // Clean the URL
+      searchParams.delete('code');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
+
   return (
     <>
       {/* HERO */}
