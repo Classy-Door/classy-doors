@@ -140,6 +140,45 @@ const Verification = () => {
             </motion.div>
           )}
 
+          {result === 'special' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8">
+              <div className="liquid-glass rounded-2xl overflow-hidden p-6 space-y-4 text-center">
+                <BadgeCheck className="w-16 h-16 text-primary mx-auto" />
+                <h2 className="text-2xl font-bold text-foreground font-playfair">
+                  {language === 'ar' ? 'Classy Door' : 'Classy Door'}
+                </h2>
+                <p className="text-base font-semibold text-primary">
+                  {language === 'ar'
+                    ? 'هذا الباب مستورد بواسطة Classy Door وتركي ١٠٠٪'
+                    : 'This Door is imported by Classy Door and 100% Turkish'}
+                </p>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>
+                    {language === 'ar'
+                      ? '✓ مصنوع من أجود المواد التركية'
+                      : '✓ Made from the finest Turkish materials'}
+                  </p>
+                  <p>
+                    {language === 'ar'
+                      ? '✓ باب أمان مصفح بمعايير أوروبية'
+                      : '✓ Armored security door with European standards'}
+                  </p>
+                  <p>
+                    {language === 'ar'
+                      ? '✓ ضمان الجودة من Classy Door'
+                      : '✓ Quality guaranteed by Classy Door'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 pt-2 justify-center">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  <p className="text-sm font-semibold text-primary">
+                    {language === 'ar' ? 'منتج أصلي موثق' : 'Verified Authentic Product'}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {result === 'not_found' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-5 rounded-xl bg-destructive/10 border border-destructive/30">
               <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
