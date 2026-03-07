@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, AlertCircle, Camera } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Camera, BadgeCheck } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,19 +9,38 @@ import type { Tables } from '@/integrations/supabase/types';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import BarcodeScanner from '@/components/BarcodeScanner';
 
+const SPECIAL_CODE = '999999';
+
 const Verification = () => {
   const { t, language } = useLanguage();
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<'idle' | 'found' | 'not_found'>('idle');
+  const [result, setResult] = useState<'idle' | 'found' | 'not_found' | 'special'>('idle');
   const [foundDoor, setFoundDoor] = useState<Tables<'doors'> | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+
+  useEffect(() => {
+    const urlCode = searchParams.get('code');
+    if (urlCode && urlCode.length >= 5) {
+      handleVerify(urlCode);
+    }
+  }, []);
 
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
     if (input.length < 5) return;
     setLoading(true);
     setResult('idle');
+
+    // Special code check
+    if (input.slice(0, 6) === SPECIAL_CODE) {
+      setLoading(false);
+      setFoundDoor(null);
+      setResult('special');
+      return;
+    }
+
     const searchCode = input.slice(0, 5);
     const { data, error } = await supabase
       .from('doors')
@@ -115,6 +135,45 @@ const Verification = () => {
                     <ShieldCheck className="w-5 h-5 text-primary" />
                     <p className="text-sm font-semibold text-primary">{t('doorFound')}</p>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {result === 'special' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8">
+              <div className="liquid-glass rounded-2xl overflow-hidden p-6 space-y-4 text-center">
+                <BadgeCheck className="w-16 h-16 text-primary mx-auto" />
+                <h2 className="text-2xl font-bold text-foreground font-playfair">
+                  {language === 'ar' ? 'Classy Door' : 'Classy Door'}
+                </h2>
+                <p className="text-base font-semibold text-primary">
+                  {language === 'ar'
+                    ? 'هذا الباب مستورد بواسطة Classy Door وتركي ١٠٠٪'
+                    : 'This Door is imported by Classy Door and 100% Turkish'}
+                </p>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>
+                    {language === 'ar'
+                      ? '✓ مصنوع من أجود المواد التركية'
+                      : '✓ Made from the finest Turkish materials'}
+                  </p>
+                  <p>
+                    {language === 'ar'
+                      ? '✓ باب أمان مصفح بمعايير أوروبية'
+                      : '✓ Armored security door with European standards'}
+                  </p>
+                  <p>
+                    {language === 'ar'
+                      ? '✓ ضمان الجودة من Classy Door'
+                      : '✓ Quality guaranteed by Classy Door'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 pt-2 justify-center">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  <p className="text-sm font-semibold text-primary">
+                    {language === 'ar' ? 'منتج أصلي موثق' : 'Verified Authentic Product'}
+                  </p>
                 </div>
               </div>
             </motion.div>
