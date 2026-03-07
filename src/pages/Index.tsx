@@ -25,6 +25,9 @@ const Index = () => {
   const [contactOpen, setContactOpen] = useState(false);
   const [doors, setDoors] = useState<Tables<'doors'>[]>([]);
   const [specialDoors, setSpecialDoors] = useState<Tables<'doors'>[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
   useEffect(() => {
