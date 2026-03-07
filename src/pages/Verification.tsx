@@ -18,7 +18,7 @@ const Verification = () => {
 
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
-    if (input.length !== 6) return;
+    if (input.length < 5) return;
     setLoading(true);
     setResult('idle');
     const searchCode = input.slice(0, 5);
