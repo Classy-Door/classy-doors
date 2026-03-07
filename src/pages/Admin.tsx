@@ -271,6 +271,15 @@ const Admin = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Barcode Preview */}
+                {editingDoor.unique_code && (
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-semibold text-foreground block mb-1">{language === 'ar' ? 'الباركود' : 'Barcode'}</label>
+                    <BarcodeDisplay code={editingDoor.unique_code} label={`${editingDoor.category || 'I'}-${editingDoor.door_number || ''}`} showDownload />
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <Button variant="golden" className="rounded-xl" onClick={handleSave} disabled={saving || !editingDoor.unique_code}>
                     <Save className="w-4 h-4" />
