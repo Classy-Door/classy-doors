@@ -358,9 +358,17 @@ const Admin = () => {
                     >
                       <Sparkles className="w-4 h-4" />
                     </button>
+                    <button onClick={() => setShowBarcode(showBarcode === door.id ? null : door.id)} className={`p-2 rounded-lg transition-colors ${showBarcode === door.id ? 'bg-primary/20 text-primary' : 'hover:bg-muted text-muted-foreground'}`} title={language === 'ar' ? 'باركود' : 'Barcode'}>
+                      <Barcode className="w-4 h-4" />
+                    </button>
                     <button onClick={() => handleEdit(door)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => handleDelete(door.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
+                  {showBarcode === door.id && (
+                    <div className="w-full mt-3 pt-3 border-t border-border">
+                      <BarcodeDisplay code={door.unique_code} label={`${door.category}-${door.door_number}`} showDownload />
+                    </div>
+                  )}
                 </motion.div>
               ))}
               {doors.length === 0 && <div className="text-center py-20"><p className="text-muted-foreground">{language === 'ar' ? 'لا توجد أبواب' : 'No doors yet'}</p></div>}
