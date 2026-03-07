@@ -282,6 +282,7 @@ const Index = () => {
       </section>
 
       <ContactDialog open={contactOpen} onClose={() => setContactOpen(false)} />
+      <VerificationDialog open={verifyOpen} onClose={() => setVerifyOpen(false)} code={verifyCode} />
       <WhatsAppButton />
     </>
   );
