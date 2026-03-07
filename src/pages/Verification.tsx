@@ -20,8 +20,6 @@ const Verification = () => {
   const [foundDoor, setFoundDoor] = useState<Tables<'doors'> | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
-  const initialCode = searchParams.get('code');
-
   const handleVerify = async (searchInput?: string) => {
     const input = searchInput || code;
     if (input.length < 5) return;
@@ -53,11 +51,17 @@ const Verification = () => {
   };
 
   useEffect(() => {
-    if (initialCode && initialCode.length >= 5) {
-      handleVerify(initialCode);
+    // Try react-router searchParams first, fallback to window.location
+    let urlCode = searchParams.get('code');
+    if (!urlCode) {
+      const params = new URLSearchParams(window.location.search);
+      urlCode = params.get('code');
+    }
+    if (urlCode && urlCode.length >= 5) {
+      handleVerify(urlCode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCode]);
+  }, []);
 
   const handleBarcodeScan = (scannedCode: string) => {
     setShowScanner(false);
