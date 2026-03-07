@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen, Star, Sparkles } from 'lucide-react';
+import { Plus, Save, Trash2, Edit2, X, Upload, Package, DoorOpen, Star, Sparkles, Barcode } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
