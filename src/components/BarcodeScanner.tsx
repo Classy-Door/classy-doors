@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -12,52 +12,66 @@ const BarcodeScanner = ({ onScan, onClose, language }: BarcodeScannerProps) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
-  const [mode, setMode] = useState<'camera' | 'idle'>('camera');
+  const isRunningRef = useRef(false);
 
   useEffect(() => {
-    if (mode !== 'camera') return;
+    const regionId = 'barcode-scanner-region';
+    const element = document.getElementById(regionId);
+    if (!element) return;
 
-    const scanner = new Html5Qrcode('barcode-scanner-region');
+    const scanner = new Html5Qrcode(regionId);
     scannerRef.current = scanner;
 
     scanner.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 280, height: 150 } },
       (decodedText) => {
+        isRunningRef.current = false;
         scanner.stop().catch(() => {});
         onScan(decodedText);
       },
       () => {}
-    ).catch((err) => {
+    ).then(() => {
+      isRunningRef.current = true;
+    }).catch((err) => {
       setError(language === 'ar' ? 'لا يمكن الوصول إلى الكاميرا' : 'Cannot access camera');
       console.error('Scanner error:', err);
     });
 
     return () => {
-      scanner.stop().catch(() => {});
+      if (isRunningRef.current) {
+        scanner.stop().catch(() => {});
+        isRunningRef.current = false;
+      }
     };
-  }, [mode]);
+  }, []);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Stop camera if running
-    if (scannerRef.current) {
-      await scannerRef.current.stop().catch(() => {});
-    }
-    setMode('idle');
     setError('');
 
-    const scanner = new Html5Qrcode('barcode-scanner-region-file');
+    // Stop camera first
+    if (isRunningRef.current && scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+      } catch {}
+      isRunningRef.current = false;
+    }
+
+    // Create a fresh instance for file scanning
+    const fileScanner = new Html5Qrcode('barcode-scanner-file-region');
     try {
-      const result = await scanner.scanFile(file, true);
+      const result = await fileScanner.scanFile(file, true);
+      fileScanner.clear();
       onScan(result);
     } catch {
+      fileScanner.clear();
       setError(language === 'ar' ? 'لم يتم العثور على باركود في الصورة' : 'No barcode found in the image');
-    } finally {
-      scanner.clear();
     }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -78,10 +92,8 @@ const BarcodeScanner = ({ onScan, onClose, language }: BarcodeScannerProps) => {
           </p>
         )}
 
-        {mode === 'camera' && (
-          <div id="barcode-scanner-region" className="rounded-xl overflow-hidden" />
-        )}
-        <div id="barcode-scanner-region-file" className="hidden" />
+        <div id="barcode-scanner-region" className="rounded-xl overflow-hidden" />
+        <div id="barcode-scanner-file-region" className="hidden" />
 
         <input
           ref={fileInputRef}
