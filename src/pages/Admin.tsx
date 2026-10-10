@@ -110,9 +110,18 @@ const Admin = () => {
 
   const handlePhotoUpload = async (file: File) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Invalid file', description: language === 'ar' ? 'يرجى تحميل صورة فقط' : 'Please upload an image file', variant: 'destructive' });
+      return;
+    }
+    const rawExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+    if (!allowedExts.includes(rawExt)) {
+      toast({ title: 'Invalid format', description: language === 'ar' ? 'الصيغ المسموح بها: JPG, PNG, WEBP' : 'Allowed formats: JPG, PNG, WEBP', variant: 'destructive' });
+      return;
+    }
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${ext}`;
+    const fileName = `${Date.now()}.${rawExt}`;
     const { error } = await supabase.storage.from('door-photos').upload(fileName, file);
     if (error) {
       toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
@@ -440,7 +449,7 @@ const Admin = () => {
                         </div>
                       ))}
                       {!orderItems[order.id] && <p className="text-sm text-muted-foreground py-2">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>}
-                      {orderItems[order.id]?.length === 0 && <p className="text-sm text-muted-foreground py-2">{language === 'ar' ? 'تم حذف العناصر (مكتمل)' : 'Items deleted (order done)'}</p>}
+                      {orderItems[order.id]?.length === 0 && <p className="text-sm text-muted-foreground py-2">{language === 'ar' ? 'لا توجد عناصر' : 'No items in order'}</p>}
                     </div>
 
                     {/* Status update buttons */}
