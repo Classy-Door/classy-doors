@@ -18,7 +18,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
-  signUp: (data: { email: string; password: string; fullName: string; phone: string }) => Promise<{ error: any }>;
+  signUp: (data: { email: string; password: string; fullName: string; phone: string; address?: string }) => Promise<{ error: any }>;
   signIn: (data: { emailOrPhone: string; password: string }) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -89,12 +89,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async ({ email, password, fullName, phone }: { email: string; password: string; fullName: string; phone: string }) => {
+  const signUp = async ({ email, password, fullName, phone, address }: { email: string; password: string; fullName: string; phone: string; address?: string }) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, phone },
+        data: { full_name: fullName, phone, address: address || '' },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -102,12 +102,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async ({ emailOrPhone, password }: { emailOrPhone: string; password: string }) => {
-    const isEmail = emailOrPhone.includes('@');
+    const input = emailOrPhone.trim();
+    const isEmail = input.includes('@');
     if (isEmail) {
-      const { error } = await supabase.auth.signInWithPassword({ email: emailOrPhone, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: input, password });
       return { error };
     } else {
-      const { data: rpcData, error: rpcError } = await supabase.rpc('get_email_by_phone', { phone_input: emailOrPhone });
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_email_by_phone', { phone_input: input });
       if (rpcError || !rpcData) {
         return { error: { message: 'No account found with this phone number' } };
       }

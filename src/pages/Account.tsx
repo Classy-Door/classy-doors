@@ -185,7 +185,12 @@ const Account = () => {
               {pastOrders.map(order => (
                 <div key={order.id} className="bg-card rounded-xl p-4 border border-border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold">{order.total} {language === 'ar' ? 'ج.م' : 'EGP'}</span>
+                    <div>
+                      <span className="text-sm font-semibold">{order.total} {language === 'ar' ? 'ج.م' : 'EGP'}</span>
+                      {order.order_number && (
+                        <span className="text-xs text-muted-foreground ms-2">#{order.order_number}</span>
+                      )}
+                    </div>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor(order.status)}`}>
                       {statusLabel(order.status)}
                     </span>

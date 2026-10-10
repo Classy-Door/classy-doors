@@ -119,8 +119,27 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const LANGUAGE_STORAGE_KEY = 'classy_door_lang';
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('ar');
+  const [language, setLanguageState] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      if (saved === 'ar' || saved === 'en') return saved;
+    } catch {
+      // ignore
+    }
+    return 'ar';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+    } catch {
+      // ignore
+    }
+  };
 
   const t = (key: string) => translations[language][key] || key;
   const dir = language === 'ar' ? 'rtl' : 'ltr';

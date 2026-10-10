@@ -53,7 +53,7 @@ const Admin = () => {
   };
 
   const fetchOrders = async () => {
-    const { data } = await supabase.from('orders').select('*').neq('status', 'canceled' as any).order('created_at', { ascending: false });
+    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (data) setOrders((data as any[]).filter((o: any) => !o.hidden));
   };
 
@@ -84,9 +84,6 @@ const Admin = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: '✓', description: language === 'ar' ? 'تم تحديث الحالة' : 'Status updated' });
-      if (newStatus === 'done') {
-        setOrderItems(prev => { const n = { ...prev }; delete n[orderId]; return n; });
-      }
       fetchOrders();
     }
     setUpdatingOrder(null);

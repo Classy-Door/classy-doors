@@ -11,6 +11,20 @@ import BarcodeScanner from '@/components/BarcodeScanner';
 
 const SPECIAL_CODE = '999999';
 
+const extractVerificationCode = (raw: string): string => {
+  const trimmed = raw.trim();
+  try {
+    if (trimmed.includes('?code=') || trimmed.includes('&code=')) {
+      const url = new URL(trimmed.startsWith('http') ? trimmed : `https://dummy.local/${trimmed.replace(/^\/?/, '')}`);
+      const codeParam = url.searchParams.get('code');
+      if (codeParam) return codeParam.trim();
+    }
+  } catch {
+    // fallback
+  }
+  return trimmed;
+};
+
 const Verification = () => {
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
@@ -22,25 +36,38 @@ const Verification = () => {
   const [showScanner, setShowScanner] = useState(false);
 
   const handleVerify = async (searchInput?: string) => {
-    const input = searchInput || code;
-    if (input.length < 5) return;
+    const rawInput = searchInput || code;
+    const input = extractVerificationCode(rawInput);
+    if (input.length < 3) return;
     setLoading(true);
     setResult('idle');
 
     // Special code check
-    if (input.slice(0, 6) === SPECIAL_CODE) {
+    if (input === SPECIAL_CODE || input.slice(0, 6) === SPECIAL_CODE) {
       setLoading(false);
       setFoundDoor(null);
       setResult('special');
       return;
     }
 
-    const searchCode = input.slice(0, 5);
-    const { data, error } = await supabase
+    // Exact match first
+    let { data, error } = await supabase
       .from('doors')
       .select('*')
-      .eq('unique_code', searchCode)
+      .eq('unique_code', input)
       .maybeSingle();
+
+    // Fallback to 5-char prefix if longer
+    if (!data && input.length > 5) {
+      const fallback = await supabase
+        .from('doors')
+        .select('*')
+        .eq('unique_code', input.slice(0, 5))
+        .maybeSingle();
+      data = fallback.data;
+      error = fallback.error;
+    }
+
     setLoading(false);
     if (data && !error) {
       setFoundDoor(data);
@@ -58,7 +85,7 @@ const Verification = () => {
       const params = new URLSearchParams(window.location.search);
       urlCode = params.get('code');
     }
-    if (urlCode && urlCode.length >= 5) {
+    if (urlCode && urlCode.trim().length >= 3) {
       handleVerify(urlCode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,8 +93,9 @@ const Verification = () => {
 
   const handleBarcodeScan = (scannedCode: string) => {
     setShowScanner(false);
-    const cleaned = scannedCode.replace(/\D/g, '').slice(0, 6);
-    if (cleaned.length >= 5) {
+    const cleaned = extractVerificationCode(scannedCode);
+    if (cleaned.length >= 3) {
+      setCode(cleaned);
       handleVerify(cleaned);
     }
   };

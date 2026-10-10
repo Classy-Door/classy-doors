@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe, LogOut, Shield } from 'lucide-react';
+import { Menu, X, Globe, LogOut, Shield, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import companyLogo from '@/assets/company_logo.jpg';
 import userLogo from '@/assets/userlogo.jpg';
@@ -11,6 +12,7 @@ import userLogo from '@/assets/userlogo.jpg';
 const Header = () => {
   const { t, language, setLanguage } = useLanguage();
   const { user, profile, signOut, isAdmin } = useAuth();
+  const { totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -48,6 +50,25 @@ const Header = () => {
               {t(link.key)}
             </Link>
           ))}
+
+          {/* Cart Icon */}
+          <Link
+            to="/cart"
+            className={`relative p-2 rounded-lg transition-all flex items-center justify-center ${
+              isActive('/cart')
+                ? 'bg-primary/15 text-primary'
+                : 'text-foreground/70 hover:text-foreground hover:bg-primary/5'
+            }`}
+            title={t('cart')}
+            aria-label={t('cart')}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -end-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow">
+                {totalItems > 99 ? '99+' : totalItems}
+              </span>
+            )}
+          </Link>
 
           {/* Language Toggle */}
           <button
@@ -90,10 +111,25 @@ const Header = () => {
           </div>
         </nav>
 
-        {/* Mobile Menu Toggle */}
-        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 text-foreground">
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile Nav Header Controls */}
+        <div className="flex items-center gap-1 md:hidden">
+          <Link
+            to="/cart"
+            className="relative p-2 text-foreground"
+            title={t('cart')}
+            aria-label={t('cart')}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -end-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
+                {totalItems > 99 ? '99+' : totalItems}
+              </span>
+            )}
+          </Link>
+          <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 text-foreground">
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -120,6 +156,26 @@ const Header = () => {
                   {t(link.key)}
                 </Link>
               ))}
+
+              <Link
+                to="/cart"
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center justify-between px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
+                  isActive('/cart')
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-foreground/70 hover:text-foreground'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  {t('cart')}
+                </span>
+                {totalItems > 0 && (
+                  <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
 
               <button
                 onClick={() => { setLanguage(language === 'ar' ? 'en' : 'ar'); setMenuOpen(false); }}

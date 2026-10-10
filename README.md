@@ -1,71 +1,122 @@
-# Welcome to your Lovable project
+# Classy Doors (كلاسي دور) 🚪
 
-## Project info
+A bilingual (Arabic & English) web application for Classy Doors, specializing in Turkish armored security doors and luxury interior doors in Egypt (with branches in El Shorouk and Giza).
 
-## How can I edit this code?
+Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, **shadcn/ui**, and **Supabase**.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## ✨ Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Door Catalog & E-Commerce**:
+  - Filter by category (Armored / Exterior vs. Interior), thickness (10cm, 11cm), stock status, and promotional tags.
+  - Directional hinge specification (Right opening vs. Left opening).
+  - Guest cart with local storage persistence and automated cloud synchronization on login.
+  - Multi-item checkout flow.
+- **Product Authenticity & Verification**:
+  - Scan door QR codes or 1D barcodes via camera scanner or image upload using `html5-qrcode`.
+  - Instant lookup of authentic door models and specifications.
+  - URL verification link support (`/?code=XXXXX` and `/verification?code=XXXXX`).
+  - Special Turkish authenticity certification certificate (`999999`).
+- **Admin Management Portal (`/admin`)**:
+  - Complete door inventory management (CRUD, photos, stock toggle, featured flag, promotional tags).
+  - High-resolution Code128 barcode generation and PNG export.
+  - Comprehensive order management with status tracking (`Pending`, `Confirmed`, `Done`, `Canceled`).
+- **User Accounts & Orders**:
+  - Phone or Email password authentication with profile persistence.
+  - Order history tracking and self-service cancellation for pending orders.
+- **Design & Localization**:
+  - Full Arabic (RTL) and English (LTR) language support with preference persisted in local storage.
+  - Editorial luxury typography using Cairo and Playfair Display fonts with a modern liquid-glass theme.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🛠️ Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**: [React 18](https://react.dev/), [Vite](https://vitejs.dev/), [TypeScript](https://www.typescriptlang.org/)
+- **UI Components & Icons**: [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/), [Framer Motion](https://www.framer.com/motion/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Backend & Database**: [Supabase](https://supabase.com/) (PostgreSQL, Row Level Security, Auth, Storage, Edge Functions)
+- **Barcodes & QR**: `html5-qrcode`, `jsbarcode`
+- **Analytics & Speed Insights**: `@vercel/analytics`, `@vercel/speed-insights`
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🚀 Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- npm or bun
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 1. Clone the repository
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone https://github.com/Classy-Door/classy-doors.git
+cd classy-doors
+```
+
+### 2. Environment Configuration
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure your Supabase environment variables in `.env`:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
+VITE_SUPABASE_PROJECT_ID=your-project-id
+```
+
+### 3. Install Dependencies
+
+```bash
+npm install
+```
+
+### 4. Run Locally
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be accessible at `http://localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 5. Build for Production
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## 🗄️ Database Migrations
 
-This project is built with:
+Database schema, tables, RLS policies, and triggers are located in [`supabase/migrations/`](./supabase/migrations).
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+To apply migrations locally with the Supabase CLI:
 
-## How can I deploy this project?
+```bash
+supabase db reset
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Or push them to your linked Supabase project:
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+supabase db push
+```
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🌐 Deployment on Vercel
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Import this repository into [Vercel](https://vercel.com/).
+2. Add the environment variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - `VITE_SUPABASE_PROJECT_ID`
+3. Deploy! Single-Page Application (SPA) routing is pre-configured in [`vercel.json`](./vercel.json).

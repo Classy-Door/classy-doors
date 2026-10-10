@@ -26,17 +26,32 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const GUEST_CART_KEY = 'classy_doors_guest_cart';
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(GUEST_CART_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Load cart from Supabase profile
+  // Load cart from Supabase profile when logged in, or localStorage for guests
   useEffect(() => {
     if (!user) {
-      setItems([]);
+      try {
+        const saved = localStorage.getItem(GUEST_CART_KEY);
+        setItems(saved ? JSON.parse(saved) : []);
+      } catch {
+        setItems([]);
+      }
       return;
     }
+
     const load = async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -49,24 +64,54 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (data?.cart_data && Array.isArray(data.cart_data)) {
-        setItems(data.cart_data as unknown as CartItem[]);
+      const remoteCart = (data?.cart_data && Array.isArray(data.cart_data))
+        ? (data.cart_data as unknown as CartItem[])
+        : [];
+
+      // Check if guest cart had items to merge
+      let guestCart: CartItem[] = [];
+      try {
+        const saved = localStorage.getItem(GUEST_CART_KEY);
+        if (saved) {
+          guestCart = JSON.parse(saved);
+          localStorage.removeItem(GUEST_CART_KEY);
+        }
+      } catch {
+        // ignore
+      }
+
+      if (guestCart.length > 0) {
+        const mergedMap = new Map<string, CartItem>();
+        remoteCart.forEach(i => mergedMap.set(i.door_id, { ...i }));
+        guestCart.forEach(g => {
+          if (mergedMap.has(g.door_id)) {
+            const existing = mergedMap.get(g.door_id)!;
+            existing.quantity_right += g.quantity_right;
+            existing.quantity_left += g.quantity_left;
+          } else {
+            mergedMap.set(g.door_id, { ...g });
+          }
+        });
+        const finalCart = Array.from(mergedMap.values());
+        setItems(finalCart);
+        await supabase.from('profiles').update({ cart_data: finalCart as any }).eq('id', user.id);
+      } else {
+        setItems(remoteCart);
       }
     };
     load();
   }, [user]);
 
-  // Persist cart to Supabase
+  // Persist cart to Supabase for authenticated users, localStorage for guests
   const persist = useCallback(async (newItems: CartItem[]) => {
-    if (!user) return;
-    await supabase.from('profiles').update({ cart_data: newItems as any }).eq('id', user.id);
+    if (user) {
+      await supabase.from('profiles').update({ cart_data: newItems as any }).eq('id', user.id);
+    } else {
+      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(newItems));
+    }
   }, [user]);
 
   const addToCart = (item: Omit<CartItem, 'quantity_right' | 'quantity_left'>, right: number, left: number) => {
-    if (!user) {
-      toast({ title: 'Please log in', description: 'You need to log in to add items to your cart.', variant: 'destructive' });
-      return;
-    }
     setItems(prev => {
       const existing = prev.find(i => i.door_id === item.door_id);
       let updated: CartItem[];

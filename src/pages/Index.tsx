@@ -58,13 +58,27 @@ const Index = () => {
       const params = new URLSearchParams(window.location.search);
       urlCode = params.get('code');
     }
-    if (urlCode && urlCode.length >= 5) {
-      setVerifyCode(urlCode.replace(/\D/g, '').slice(0, 6));
-      setVerifyOpen(true);
-      // Clean the URL
-      searchParams.delete('code');
-      setSearchParams(searchParams, { replace: true });
+    if (urlCode) {
+      let cleanCode = urlCode.trim();
+      try {
+        if (cleanCode.includes('?code=') || cleanCode.includes('&code=')) {
+          const parsed = new URL(cleanCode.startsWith('http') ? cleanCode : `https://dummy.local/${cleanCode.replace(/^\/?/, '')}`);
+          const p = parsed.searchParams.get('code');
+          if (p) cleanCode = p.trim();
+        }
+      } catch {
+        // fallback
+      }
+
+      if (cleanCode.length >= 3) {
+        setVerifyCode(cleanCode);
+        setVerifyOpen(true);
+        // Clean the URL
+        searchParams.delete('code');
+        setSearchParams(searchParams, { replace: true });
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -61,6 +61,7 @@ const Signup = () => {
       password: form.password,
       fullName: form.fullName,
       phone: form.phone,
+      address: form.address,
     });
     setLoading(false);
 
