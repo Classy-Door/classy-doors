@@ -32,37 +32,25 @@ const VerificationDialog = ({ open, onClose, code }: VerificationDialogProps) =>
   };
 
   useEffect(() => {
-    const cleanCode = code ? code.trim() : '';
-    if (!open || !cleanCode || cleanCode.length < 3) return;
+    if (!open || !code || code.length < 5) return;
 
     const verify = async () => {
       setLoading(true);
       setResult('idle');
 
-      if (cleanCode === SPECIAL_CODE || cleanCode.slice(0, 6) === SPECIAL_CODE) {
+      if (code.slice(0, 6) === SPECIAL_CODE) {
         setLoading(false);
         setFoundDoor(null);
         setResult('special');
         return;
       }
 
-      // Exact match first
-      let { data, error } = await supabase
+      const searchCode = code.slice(0, 5);
+      const { data, error } = await supabase
         .from('doors')
         .select('*')
-        .eq('unique_code', cleanCode)
+        .eq('unique_code', searchCode)
         .maybeSingle();
-
-      // Fallback to 5-char prefix if longer
-      if (!data && cleanCode.length > 5) {
-        const fallback = await supabase
-          .from('doors')
-          .select('*')
-          .eq('unique_code', cleanCode.slice(0, 5))
-          .maybeSingle();
-        data = fallback.data;
-        error = fallback.error;
-      }
 
       setLoading(false);
       if (data && !error) {
