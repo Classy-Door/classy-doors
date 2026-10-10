@@ -91,4 +91,22 @@ describe('Admin Orders & Pricing Calculation Security', () => {
     expect(computedTotal).toBe(3 * 14500);
     expect(computedTotal).toBe(43500);
   });
+
+  it('validates quantity range to prevent negative or overflow injection', () => {
+    const validateQuantity = (qty: number) => {
+      if (!Number.isInteger(qty) || qty <= 0 || qty > 1000) {
+        throw new Error('Quantity must be an integer between 1 and 1000');
+      }
+      return true;
+    };
+
+    expect(validateQuantity(1)).toBe(true);
+    expect(validateQuantity(50)).toBe(true);
+    expect(validateQuantity(1000)).toBe(true);
+
+    expect(() => validateQuantity(0)).toThrow('Quantity must be an integer between 1 and 1000');
+    expect(() => validateQuantity(-5)).toThrow('Quantity must be an integer between 1 and 1000');
+    expect(() => validateQuantity(1001)).toThrow('Quantity must be an integer between 1 and 1000');
+    expect(() => validateQuantity(1.5)).toThrow('Quantity must be an integer between 1 and 1000');
+  });
 });

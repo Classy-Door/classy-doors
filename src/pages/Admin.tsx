@@ -120,6 +120,10 @@ const Admin = () => {
       toast({ title: 'Invalid format', description: language === 'ar' ? 'الصيغ المسموح بها: JPG, PNG, WEBP' : 'Allowed formats: JPG, PNG, WEBP', variant: 'destructive' });
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: 'File too large', description: language === 'ar' ? 'أقصى حجم للصورة 10 ميجابايت' : 'Maximum file size is 10MB', variant: 'destructive' });
+      return;
+    }
     setUploading(true);
     const fileName = `${Date.now()}.${rawExt}`;
     const { error } = await supabase.storage.from('door-photos').upload(fileName, file);

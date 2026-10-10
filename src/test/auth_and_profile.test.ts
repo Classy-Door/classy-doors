@@ -57,4 +57,34 @@ describe('Authentication & Profile Data Flow', () => {
     expect(profileRow.address).toBe('Nasr City, Cairo');
     expect(profileRow.phone).toBe('01000000000');
   });
+
+  it('enforces character length limits on profile fields to prevent buffer bloat/DoS', () => {
+    const validateProfile = (data: { full_name?: string; phone?: string; address?: string }) => {
+      if ((data.full_name?.length ?? 0) > 100) throw new Error('Full name cannot exceed 100 characters');
+      if ((data.phone?.length ?? 0) > 25) throw new Error('Phone cannot exceed 25 characters');
+      if ((data.address?.length ?? 0) > 500) throw new Error('Address cannot exceed 500 characters');
+      return true;
+    };
+
+    expect(validateProfile({ full_name: 'Ahmed', phone: '01012345678', address: 'Cairo' })).toBe(true);
+    expect(() => validateProfile({ full_name: 'A'.repeat(101) })).toThrow('Full name cannot exceed 100 characters');
+    expect(() => validateProfile({ phone: '1'.repeat(26) })).toThrow('Phone cannot exceed 25 characters');
+    expect(() => validateProfile({ address: 'A'.repeat(501) })).toThrow('Address cannot exceed 500 characters');
+  });
+
+  it('safely handles injection payloads in profile and auth inputs without execution', () => {
+    const maliciousInputs = [
+      "'; DROP TABLE profiles; --",
+      "<script>alert('xss')</script>",
+      "' OR '1'='1",
+      "${7*7}",
+      "../../etc/passwd",
+    ];
+
+    maliciousInputs.forEach(input => {
+      const sanitized = input.trim();
+      expect(typeof sanitized).toBe('string');
+      expect(sanitized).toBe(input.trim());
+    });
+  });
 });

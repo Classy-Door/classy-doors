@@ -108,9 +108,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { error } = await supabase.auth.signInWithPassword({ email: input, password });
       return { error };
     } else {
+      // First attempt secure server-side phone-login Edge Function
+      try {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('phone-login', {
+          body: { phone: input, password },
+        });
+
+        if (!fnError && fnData) {
+          if (fnData.error) {
+            return { error: { message: fnData.error } };
+          }
+          if (fnData.session) {
+            const { error: sessionError } = await supabase.auth.setSession(fnData.session);
+            if (!sessionError) {
+              setSession(fnData.session);
+              setUser(fnData.user || fnData.session.user);
+              if (fnData.session.user) {
+                fetchProfile(fnData.session.user.id);
+                fetchRole(fnData.session.user.id);
+              }
+              return { error: null };
+            }
+          }
+        }
+      } catch {
+        // Fallback to direct RPC if Edge Function is offline or pending deployment
+      }
+
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_email_by_phone', { phone_input: input });
       if (rpcError || !rpcData) {
-        return { error: { message: 'No account found with this phone number' } };
+        return { error: { message: 'Invalid phone number or password' } };
       }
       const { error } = await supabase.auth.signInWithPassword({ email: rpcData, password });
       return { error };
